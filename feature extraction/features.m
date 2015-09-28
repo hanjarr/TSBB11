@@ -7,10 +7,12 @@ im = im_red.*0.2989;
 im(:,:,2) = im_green(:,:,2).*0.5870;
 im(:,:,3) = im_blue(:,:,3).*0.1140;
 
-inImage = imgaussfilt(im(3500:4000, 1500:2000, :),8);
+impart = im(4000:4500, 2000:2500, :);
+
+inImage = imgaussfilt(impart, 8);
 inImSize = size(inImage);
 
-N=3; %NxN imSize
+N=4; %NxN imSize
 
 upperLimits = [floor(inImSize(1)/N)*N, floor(inImSize(2)/N)*N];
 image = inImage(1:upperLimits(1),1:upperLimits(2));
@@ -34,25 +36,54 @@ for i=1:N:imSize(1)-N
 end
 
 figure(1)
-subplot(1,5,1)
+subplot(2,5,1)
 imshow(newImage(:,:,1))
 title('Contrast')
 
-subplot(1,5,2)
+subplot(2,5,2)
 imshow(newImage(:,:,2))
 title('Correlation')
 
-subplot(1,5,3)
+subplot(2,5,3)
 imshow(newImage(:,:,3))
 title('Energy')
 
-subplot(1,5,4)
+subplot(2,5,4)
 imshow(newImage(:,:,4))
 title('Homogeneity')
 
-subplot(1,5,5)
-imshow(im_blue(3500:4000,1500:2000, :))
-title('Org_Image')
+subplot(2,5,5)
+imshow(impart)
+title('inImage')
 
+%%Rad 2
+lowpass = newImage;
+lowpass(:,:,1) = imgaussfilt(lowpass(:,:,1),0.5);
+lowpass(:,:,1) = im2bw(lowpass(:,:,1), 0.5);
+
+lowpass(:,:,2) = imgaussfilt(lowpass(:,:,2),0.5);
+lowpass(:,:,2) = im2bw(lowpass(:,:,2), 0.5);
+
+lowpass(:,:,3) = imgaussfilt(lowpass(:,:,3),1);
+lowpass(:,:,3) = im2bw(lowpass(:,:,3), 0.3);
+
+lowpass(:,:,4) = imgaussfilt(lowpass(:,:,4),0.5);
+lowpass(:,:,4) = im2bw(lowpass(:,:,4), 0.8);
+
+subplot(2,5,6)
+imshow(lowpass(:,:,1))
+title('Low Contrast')
+
+subplot(2,5,7)
+imshow(lowpass(:,:,2))
+title('Low Corr')
+
+subplot(2,5,8)
+imshow(lowpass(:,:,3))
+title('Low Energy')
+
+subplot(2,5,9)
+imshow(lowpass(:,:,4))
+title('Low Homo')
 
 
