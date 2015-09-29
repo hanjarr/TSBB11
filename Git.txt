@@ -1,10 +1,10 @@
 GIT SETUP INSTRUCTIONS
 
 1. Skapa ett konto på GitHub, bli inbjuden till repository TSBB11
-2. $ git config user.name "NAME" (samma användarnamn som till github)
-3. $ git config user.email "EMAIL" (samma mail som till github)
-4. Skapa en mapp på valfritt ställe
-5. $ git init (i den nya mappen)
+2. Skapa en mapp på valfritt ställe 
+3. $ git init (i den nya mappen)
+4. $ git config user.name "NAME" (samma användarnamn som till github)
+5. $ git config user.email "EMAIL" (samma mail som till github)
 6. $ git remote add origin https://github.com/hanjarr/TSBB11
 7. $ git pull origin master
 8. $ git add FILENAME
