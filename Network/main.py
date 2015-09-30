@@ -3,7 +3,6 @@ from osgeo import gdal
 from matplotlib import pyplot as plt
 import mnist_loader
 import numpy as np
-import scipy as sci
 import random
 import cv2
 import utils
@@ -13,7 +12,7 @@ def main():
 	#training_data, validation_data, test_data = mnist_loader.load_data_wrapper()
 	#net = Network([784,30,10])
 
-	block_dim = 10
+	block_dim = 20
 	input_layer = block_dim**2
 	hidden_layer = 30
 	output_layer = 3
