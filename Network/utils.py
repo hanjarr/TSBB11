@@ -4,6 +4,7 @@ import cv2
 def split_image(image_array, block_dim):
 
 	image_array = cv2.cvtColor(image_array, cv2.COLOR_BGR2GRAY)
+
 	
 	image_dim = np.shape(image_array);
 	num_blocks = image_dim[0]**2/(block_dim**2)
@@ -20,35 +21,36 @@ def split_image(image_array, block_dim):
 	return image_blocks
 
 
-def load_data():
-
-	np.set_printoptions(threshold=np.nan)
+def load_data(block_dim):
 
 	osm = cv2.imread("osm.png")
 	vricon = cv2.imread("vri.png")
-	osm_blocks = split_image(osm, 20)
-	vricon_blocks = split_image(vricon, 20)
+	osm_blocks = split_image(osm, block_dim)
+	vricon_blocks = split_image(vricon, block_dim)
 
-	vricon_arrays = np.reshape(vricon_blocks, (400,10000))
-	osm_arrays = np.reshape(osm_blocks, (400,10000))
+	image_dim = np.shape(vricon);
+	num_blocks = image_dim[0]**2/(block_dim**2)
+	training_blocks = int(num_blocks*0.8)
+	test_blocks = num_blocks - training_blocks
 
-	tr_inputs = np.float32(vricon_arrays[:,0:7000])
+	vricon_arrays = np.reshape(vricon_blocks, (block_dim**2,num_blocks))
+	osm_arrays = np.reshape(osm_blocks, (block_dim**2,num_blocks))
+
+	tr_inputs = np.float32(vricon_arrays[:,0:training_blocks])
 	tr_inputs /= 255.0
-	tr_keys = osm_arrays[:,0:7000]
+	tr_keys = osm_arrays[:,0:training_blocks]
 
-	te_inputs = np.float32(vricon_arrays[:,7000:])
+	te_inputs = np.float32(vricon_arrays[:,training_blocks:])
 	te_inputs /= 255.0
-	te_keys = osm_arrays[:,7000:]
+	te_keys = osm_arrays[:,training_blocks:]
 
-	training_inputs = [np.reshape(tr_inputs[:,y],(400,1)) for y in range(0,7000)]
-	training_keys = [class_label(tr_keys[:,x]) for x in range(0,7000)]
+	training_inputs = [np.reshape(tr_inputs[:,y],(block_dim**2,1)) for y in range(0,training_blocks)]
+	training_keys = [class_label(tr_keys[:,x]) for x in range(0,training_blocks)]
 	training_data = zip(training_inputs,training_keys)
 
-	test_inputs = [np.reshape(te_inputs[:,y],(400,1)) for y in range(0,3000)]
-	test_keys= [test_label(te_keys[:,x]) for x in range(0,3000)]
+	test_inputs = [np.reshape(te_inputs[:,y],(block_dim**2,1)) for y in range(0,test_blocks)]
+	test_keys= [test_label(te_keys[:,x]) for x in range(0,test_blocks)]
 	test_data = zip(test_inputs,np.int64(test_keys))
-
-	#test_data = [[te_inputs[:,y],class_label(te_keys[:,y])] for y in range(0,3000)]
 
 	return (training_data,test_data)
 
@@ -66,9 +68,9 @@ def class_label(label_array):
 
 def test_label(label_array):
 	mean = np.mean(label_array)
-	if mean >200:
+	if mean >250:
 		class_label=0
-	elif mean < 100:
+	elif mean < 200:
 		class_label=1
 	else:
 		class_label=2
