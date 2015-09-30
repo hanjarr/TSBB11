@@ -60,7 +60,7 @@ def class_label(label_array):
 	class_array = np.zeros((3,1))
 	if mean >250:
 		class_array[0]=1.0
-	elif mean < 200:
+	elif mean < 100:
 		class_array[1]=1.0
 	else:
 		class_array[2]=1.0
@@ -70,7 +70,7 @@ def test_label(label_array):
 	mean = np.mean(label_array)
 	if mean >250:
 		class_label=0
-	elif mean < 200:
+	elif mean < 100:
 		class_label=1
 	else:
 		class_label=2
