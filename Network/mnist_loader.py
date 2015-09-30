@@ -66,6 +66,9 @@ def load_data_wrapper():
     the training data and the validation / test data.  These formats
     turn out to be the most convenient for use in our neural network
     code."""
+
+    np.set_printoptions(threshold=np.nan)
+
     tr_d, va_d, te_d = load_data()
     training_inputs = [np.reshape(x, (784, 1)) for x in tr_d[0]]
     training_results = [vectorized_result(y) for y in tr_d[1]]
@@ -74,6 +77,10 @@ def load_data_wrapper():
     validation_data = zip(validation_inputs, va_d[1])
     test_inputs = [np.reshape(x, (784, 1)) for x in te_d[0]]
     test_data = zip(test_inputs, te_d[1])
+
+    print type(training_inputs[0][0][0])
+    print np.unique(training_inputs[0])
+
     return (training_data, validation_data, test_data)
 
 def vectorized_result(j):
