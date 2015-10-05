@@ -45,7 +45,7 @@ def load_data(block_dim):
 	te_keys = osm_arrays[:,training_blocks:]
 
 	training_inputs = [np.reshape(tr_inputs[:,y],(block_dim**2,1)) for y in range(0,training_blocks)]
-	training_keys = [class_label(tr_keys[:,x]) for x in range(0,training_blocks)]
+	training_keys = [training_label(tr_keys[:,x]) for x in range(0,training_blocks)]
 	training_data = zip(training_inputs,training_keys)
 
 	test_inputs = [np.reshape(te_inputs[:,y],(block_dim**2,1)) for y in range(0,test_blocks)]
@@ -55,26 +55,50 @@ def load_data(block_dim):
 	return (training_data,test_data)
 
 
-def class_label(label_array):
-	mean = np.mean(label_array)
+# def class_label(label_array):
+# 	mean = np.mean(label_array)
+# 	class_array = np.zeros((3,1))
+# 	if mean >250:
+# 		class_array[0]=1.0
+# 	elif mean < 100:
+# 		class_array[1]=1.0
+# 	else:
+# 		class_array[2]=1.0
+# 	return class_array
+
+def training_label(label_array):
 	class_array = np.zeros((3,1))
-	if mean >250:
+	counts = np.bincount(label_array)
+	block_class = np.argmax(counts)
+	if block_class == 255:
 		class_array[0]=1.0
-	elif mean < 100:
+	elif block_class == 232:
 		class_array[1]=1.0
 	else:
 		class_array[2]=1.0
 	return class_array
 
+
 def test_label(label_array):
-	mean = np.mean(label_array)
-	if mean >250:
+	counts = np.bincount(label_array)
+	block_class = np.argmax(counts)
+	if block_class == 255:
 		class_label=0
-	elif mean < 100:
+	elif block_class == 232:
 		class_label=1
 	else:
 		class_label=2
 	return class_label
+
+# def test_label(label_array):
+# 	mean = np.mean(label_array)
+# 	if mean >250:
+# 		class_label=0
+# 	elif mean < 100:
+# 		class_label=1
+# 	else:
+# 		class_label=2
+# 	return class_label
 
 
 
