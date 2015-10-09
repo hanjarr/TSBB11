@@ -35,6 +35,11 @@ for i=1:N:imSize(1)-N
     counter = i/(imSize(1)-N)
 end
 
+newImage(:,:,1) = newImage(:,:,1)/max(max(newImage(:,:,1)));
+newImage(:,:,2) = newImage(:,:,2)/max(max(newImage(:,:,2)));
+newImage(:,:,3) = newImage(:,:,3)/max(max(newImage(:,:,3)));
+newImage(:,:,4) = newImage(:,:,4)/max(max(newImage(:,:,4)));
+
 figure(1)
 subplot(2,5,1)
 imshow(newImage(:,:,1))
