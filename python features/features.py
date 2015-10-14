@@ -93,13 +93,16 @@ for i in range(0,int(upperLimits[0]-N), N):
 print np.shape(arrayImage)
 print type(arrayImage)
 
+#Normalization and converting to uint8
 contrast = np.multiply(np.divide(np.array(newImage[:,:,0],dtype=np.uint8), np.amax(newImage[:,:,0])),255)
 correlation = np.multiply(np.divide(np.array(newImage[:,:,1],dtype=np.uint8), np.amax(newImage[:,:,1])),255)
 energy = np.multiply(np.divide(np.array(newImage[:,:,2],dtype=np.uint8), np.amax(newImage[:,:,2])),255)
 homogeneity = np.multiply(np.divide(np.array(newImage[:,:,3],dtype=np.uint8), np.amax(newImage[:,:,3])),255)
 
-arrayImage.tofile("features.ext")
+#Save data to file
+np.save("features", arrayImage)
 
+#Display features
 cv2.imshow("contrast", contrast)
 cv2.imshow("correlation", correlation)
 cv2.imshow("energy", energy)
