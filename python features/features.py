@@ -68,10 +68,11 @@ image = totalImage[1:upperLimits[0],1:upperLimits[1]]
 
 # An empty image
 newImage = np.zeros((upperLimits[0]/N-1, upperLimits[1]/N-1, 4))
+arrayImage = np.zeros((4,(upperLimits[1]-N)/N+((upperLimits[0]-N)*(upperLimits[1]-N))/N))
 
 # Creating features contrast, energy, correlation, homogeneity
 for i in range(0,int(upperLimits[0]-N), N):
-	for k in range (0,int(upperLimits[0]-N), N):
+	for k in range (0,int(upperLimits[1]-N), N):
 		extImage = image[i:i+N, k:k+N]
 		stats = imStats(extImage)
 		#print k
@@ -81,27 +82,39 @@ for i in range(0,int(upperLimits[0]-N), N):
 		newImage[(i/N), (k/N), 2] = stats[2];
 		newImage[(i/N), (k/N), 3] = stats[3];
 		
+		#Reshape to array
+		arrayImage[:,k/N+(i*(upperLimits[1]-N)/N)] = stats
+		
 
 	print i/(upperLimits[0]-N)
 
-# Normalization
-#newImage[:,:,1] = newImage[:,:,1]/np.amax(newImage[:,:,1]);
-#newImage[:,:,2] = newImage[:,:,2]/np.amax(newImage[:,:,2]);
-#newImage[:,:,3] = newImage[:,:,3]/np.amax(newImage[:,:,3]);
-#newImage[:,:,4] = newImage[:,:,4]/np.amax(newImage[:,:,4]);
 
 #print newImage[:,:,0]
+print np.shape(arrayImage)
+print type(arrayImage)
 
+#Normalization and converting to uint8
 contrast = np.multiply(np.divide(np.array(newImage[:,:,0],dtype=np.uint8), np.amax(newImage[:,:,0])),255)
 correlation = np.multiply(np.divide(np.array(newImage[:,:,1],dtype=np.uint8), np.amax(newImage[:,:,1])),255)
 energy = np.multiply(np.divide(np.array(newImage[:,:,2],dtype=np.uint8), np.amax(newImage[:,:,2])),255)
 homogeneity = np.multiply(np.divide(np.array(newImage[:,:,3],dtype=np.uint8), np.amax(newImage[:,:,3])),255)
+
+arrayImage[0,:]= np.divide(arrayImage[0,:],np.amax(arrayImage[0,:]))
+arrayImage[1,:]= np.divide(arrayImage[1,:],np.amax(arrayImage[1,:]))
+arrayImage[2,:]= np.divide(arrayImage[2,:],np.amax(arrayImage[2,:]))
+arrayImage[3,:]= np.divide(arrayImage[3,:],np.amax(arrayImage[3,:]))
+
+#Save data to file
+np.save("features", arrayImage)
+
+#Display features
 cv2.imshow("contrast", contrast)
 cv2.imshow("correlation", correlation)
 cv2.imshow("energy", energy)
 cv2.imshow("homogeneity", homogeneity)
-
 cv2.waitKey(0)
+
+
 
 
 
