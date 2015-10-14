@@ -31,9 +31,9 @@ def imStats(image_block):
 
 
 # Import the images
-im_blue = cv2.imread("../../sydney/ortho_blue/0_0_0_tex.tif")
-im_red = cv2.imread("../../sydney/ortho_red/0_0_0_tex.tif")
-im_green = cv2.imread("../../sydney/ortho_green/0_0_0_tex.tif")
+im_blue = cv2.imread("../images/ortho_blue.png")
+im_red = cv2.imread("../images/ortho_red.png")
+im_green = cv2.imread("../images/ortho_green.png")
 im_nir = cv2.imread("../../sydney/ortho_nir/0_0_0_tex.tif")
 
 
@@ -49,7 +49,7 @@ im[:,:,2] = np.multiply(np.array(blueSlice),0.1140)
 #imUint8 = np.array(im,dtype=np.uint8)
 
 # Divid the image
-impart = im[4000:4500, 2000:2500, :]
+impart = im
 
 # Filtrating the image
 inImage = impart
@@ -102,7 +102,7 @@ homogeneity = np.multiply(np.divide(np.array(newImage[:,:,3],dtype=np.uint8), np
 arrayImage[0,:]= np.divide(arrayImage[0,:],np.amax(arrayImage[0,:]))
 arrayImage[1,:]= np.divide(arrayImage[1,:],np.amax(arrayImage[1,:]))
 arrayImage[2,:]= np.divide(arrayImage[2,:],np.amax(arrayImage[2,:]))
-arrayImage[3,:]= np.divide(arrayImage[3,:],np.amax(arrayImage[3,:]))
+arrayImage[ 3,:]= np.divide(arrayImage[3,:],np.amax(arrayImage[3,:]))
 
 #Save data to file
 np.save("features", arrayImage)
