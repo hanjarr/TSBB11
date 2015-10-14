@@ -99,6 +99,11 @@ correlation = np.multiply(np.divide(np.array(newImage[:,:,1],dtype=np.uint8), np
 energy = np.multiply(np.divide(np.array(newImage[:,:,2],dtype=np.uint8), np.amax(newImage[:,:,2])),255)
 homogeneity = np.multiply(np.divide(np.array(newImage[:,:,3],dtype=np.uint8), np.amax(newImage[:,:,3])),255)
 
+arrayImage[0,:]= np.divide(arrayImage[0,:],np.amax(arrayImage[0,:]))
+arrayImage[1,:]= np.divide(arrayImage[1,:],np.amax(arrayImage[1,:]))
+arrayImage[2,:]= np.divide(arrayImage[2,:],np.amax(arrayImage[2,:]))
+arrayImage[3,:]= np.divide(arrayImage[3,:],np.amax(arrayImage[3,:]))
+
 #Save data to file
 np.save("features", arrayImage)
 
