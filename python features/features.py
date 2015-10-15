@@ -64,11 +64,10 @@ inImSize = np.shape(totalImage)
 N = 4
 upperLimits = np.array([np.floor(inImSize[0]/N)*N, np.floor(inImSize[1]/N)*N])
 image = totalImage[1:upperLimits[0],1:upperLimits[1]]
-# imSize = size(image);
 
 # An empty image
-newImage = np.zeros((upperLimits[0]/N-1, upperLimits[1]/N-1, 4))
-arrayImage = np.zeros((4,(upperLimits[1]-N)/N+((upperLimits[0]-N)*(upperLimits[1]-N))/N))
+newImage = np.zeros((upperLimits[0]/N, upperLimits[1]/N, 4))
+arrayImage = np.zeros((4,(upperLimits[1]/N)*(upperLimits[0]/N)))
 
 # Creating features contrast, energy, correlation, homogeneity
 for i in range(0,int(upperLimits[0]-N), N):
@@ -83,7 +82,7 @@ for i in range(0,int(upperLimits[0]-N), N):
 		newImage[(i/N), (k/N), 3] = stats[3];
 		
 		#Reshape to array
-		arrayImage[:,k/N+(i*(upperLimits[1]-N)/N)] = stats
+		arrayImage[:,k/N+(i*(upperLimits[1])/N**2)] = stats
 		
 
 	print i/(upperLimits[0]-N)
