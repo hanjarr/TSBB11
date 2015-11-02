@@ -1,0 +1,93 @@
+html, body, div, h1, h2, a, p, header, footer{
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-size: 100%;
+	font: inherit;
+	vertical-align: baseline;
+	outline: none;
+	-webkit-font-smoothing: antialiased;
+	-webkit-text-size-adjust: 100%;
+	-ms-text-size-adjust: 100%;
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+	text-decoration: none;
+}
+
+html{
+	height: 100%;
+}
+
+body{
+	width: 100%;
+	background-color: #FF6600;
+}
+
+header{
+	display: block;
+	position: relative;
+	background-color: #FF0066;
+	width: 100%;
+	height: 15vh;
+	z-index: 101;
+}
+
+footer{
+	display: block;
+	position: relative;
+	background-color: #FF0066;
+	width: 100%;
+	height: 5vh;
+	bottom: 0px;
+}
+
+.headerBtn{
+	float: right;
+	background-color: #00FF66;
+	width: 5vw;
+	height: 5vh;
+	margin-top: 5vh;
+	margin-right: 1vw;
+	font-family: "Times New Roman", Georgia, Serif;
+	font-size: 0.8vw;
+	text-align: center;
+	color: #000000;
+	padding-top: 1%;
+}
+
+.headerLogo{
+	float: left;
+	margin-top: 2vh;
+	margin-left: 1vw;
+	background-image: url("logoCartomatic.png");
+	background-size: 100%;
+	background-repeat: no-repeat;
+	width: 20vw;
+	height: 13vh;
+}
+
+.allDiv{
+	position: relative;
+	display: none;
+	width: 100%;
+	height: 80vh;
+	z-index: 100;
+	
+}
+
+#homeDiv{
+	display: block;
+}
+
+#aboutDiv{
+	background-color: #FFF066;
+}
+
+#resultDiv{
+	background-color: #F0F066;
+}
+
+#documentDiv{
+	background-color: #F06F06;
+}
