@@ -35,7 +35,7 @@ def load_data(block_dim):
 	training_blocks = int(num_blocks*0.8)
 	test_blocks = num_blocks - training_blocks
 
-	features = "features.npy"
+	features = "../python features/features.npy"
 	vricon_arrays = np.load(features)
 
 	osm_arrays = np.uint8(np.reshape(osm_blocks, (block_dim**2,num_blocks)))
@@ -46,18 +46,43 @@ def load_data(block_dim):
 	te_inputs = np.float32(vricon_arrays[:,training_blocks:])
 	te_keys = osm_arrays[:,training_blocks:]
 
-
-
 	training_inputs = [np.reshape(tr_inputs[:,y],(4,1)) for y in xrange(0,training_blocks)]
 	training_keys = [training_label(tr_keys[:,x]) for x in xrange(0,training_blocks)]
-
 	training_data = zip(training_inputs,training_keys)
-
+	
+	#SORT OUT SAME AMOUNT OF EACH LABLE
+	sumOfAll = sum(training_keys)
+	numOfEach = np.min(sumOfAll)
+	
+	i=0
+	k=0
+	index=0
+	newIndex = 0
+	newTrainingData = [training_data[x] for x in xrange(0,int(3*numOfEach))]
+	
+	while (k<3):
+		
+		if(training_keys[index][k] == 1):
+			newTrainingData[newIndex] = training_data[index]
+			newIndex = newIndex+1
+			i = i+1
+			
+			if i == numOfEach:
+				i=0
+				k = k+1
+				index=0
+			
+		index=index+1
+	
+	training_data = newTrainingData
+	#END OF SORT
+	
 	test_inputs = [np.reshape(te_inputs[:,y],(4,1)) for y in xrange(0,test_blocks)]
 	test_keys= [test_label(te_keys[:,x]) for x in xrange(0,test_blocks)]
 	test_data = zip(test_inputs,np.int64(test_keys))
 
-	return (training_data,test_data)
+	label_weights = sum(training_keys)/(sum(training_keys)[0])
+	return (training_data,test_data,label_weights)
 
 
 def training_label(label_array):
