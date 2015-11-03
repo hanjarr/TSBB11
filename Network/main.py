@@ -17,6 +17,9 @@ def main():
 
 	training_data, test_data, label_weights = utils3.load_data(block_dim)
 	net = Network([input_layer,hidden_layer,output_layer])
-
-	net.SGD(training_data, 10, 10, 3.0,label_weights, test_data = test_data)
+	
+	net.SGD(training_data, 50, 10, 3.0,label_weights, test_data = test_data)
+	
+	utils3.createImage(net, block_dim)
+	
 main()
