@@ -46,18 +46,16 @@ def load_data(block_dim):
 	te_inputs = np.float32(vricon_arrays[:,training_blocks:])
 	te_keys = osm_arrays[:,training_blocks:]
 
-
-
 	training_inputs = [np.reshape(tr_inputs[:,y],(4,1)) for y in xrange(0,training_blocks)]
 	training_keys = [training_label(tr_keys[:,x]) for x in xrange(0,training_blocks)]
-
 	training_data = zip(training_inputs,training_keys)
 
 	test_inputs = [np.reshape(te_inputs[:,y],(4,1)) for y in xrange(0,test_blocks)]
 	test_keys= [test_label(te_keys[:,x]) for x in xrange(0,test_blocks)]
 	test_data = zip(test_inputs,np.int64(test_keys))
 
-	return (training_data,test_data)
+	label_weights = sum(training_keys)/(sum(training_keys)[0])
+	return (training_data,test_data,label_weights)
 
 
 def training_label(label_array):
