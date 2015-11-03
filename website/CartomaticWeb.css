@@ -17,20 +17,29 @@ html, body, div, h1, h2, a, p, header, footer{
 
 html{
 	height: 100%;
+	overflow: hidden;
 }
 
 body{
 	width: 100%;
-	background-color: #FF6600;
+	background-color: #8B8E91;
+}
+
+br{
+	display: block;
+	line-height:1.6em;
 }
 
 header{
 	display: block;
 	position: relative;
-	background-color: #FF0066;
+	background-color: #787C7C;
 	width: 100%;
-	height: 15vh;
+	height: 100px;
 	z-index: 101;
+	border-bottom-color: B9B9BB;
+	border-bottom-style: solid;
+	border-bottom-width: 3px;
 }
 
 footer{
@@ -42,52 +51,90 @@ footer{
 	bottom: 0px;
 }
 
+h1 {
+	font-family: 'Lucida Sans Unicode', 'Lucida Grande', sans-serif;
+	font-size: 1.6em;
+	line-height: 1.3em;
+	font-weight: 700;
+	color: #FFFFFF;
+	letter-spacing: -0.05em;
+	margin-bottom: 15px;
+}
+
+p {
+	width: 50%;
+	font-size: 16px;
+	font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+}
+
+hr{
+	width: 50%;
+	float: left;
+	border-style: dotted;
+	border-width: 2px;
+	
+}
+
 .headerBtn{
-	float: right;
-	background-color: #00FF66;
-	width: 5vw;
-	height: 5vh;
-	margin-top: 5vh;
-	margin-right: 1vw;
-	font-family: "Times New Roman", Georgia, Serif;
-	font-size: 0.8vw;
+	float: left;
+	background: none;
+	width: 30%;
+	height: 10px;
+	margin-top: 60px;
+	margin-right: auto;
+	margin-left: auto;
+	font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+	font-size: 20px;
 	text-align: center;
-	color: #000000;
+	color: #FFFFFF;
 	padding-top: 1%;
 }
 
+.oneThird{
+	height: 100%;
+	display: inline-block;
+	width: 32%;
+	z-index: 300;
+}
+
 .headerLogo{
-	float: left;
-	margin-top: 2vh;
-	margin-left: 1vw;
+	background-position: center;
+	margin-left: auto;
+	margin-right: auto;
+	margin-top: 10px;
 	background-image: url("logoCartomatic.png");
 	background-size: 100%;
 	background-repeat: no-repeat;
 	width: 20vw;
-	height: 13vh;
+	height: 120px;
 }
 
 .allDiv{
 	position: relative;
 	display: none;
-	width: 100%;
+	width: 90%;
 	height: 80vh;
 	z-index: 100;
-	
+	background-color:#8B8E91;
+	/*border-color: #000000;
+		border-style: solid;
+	border-width: 3px;*/
+	margin-top: 50px;
+	margin-right: 5%;
+	margin-left: 5%;
+	overflow: auto;
+	color:#FFFFFF;
+}
+
+#homeBtn{
+	float: right;
+}
+
+#aboutBtn{
+	float: right;
 }
 
 #homeDiv{
 	display: block;
 }
 
-#aboutDiv{
-	background-color: #FFF066;
-}
-
-#resultDiv{
-	background-color: #F0F066;
-}
-
-#documentDiv{
-	background-color: #F06F06;
-}
