@@ -31,10 +31,10 @@ def imStats(image_block):
 
 
 # Import the images
-im_blue = cv2.imread("../images/ortho_blue.png")
-im_red = cv2.imread("../images/ortho_red.png")
-im_green = cv2.imread("../images/ortho_green.png")
-im_nir = cv2.imread("../../sydney/ortho_nir/0_0_0_tex.tif")
+im_blue = cv2.imread("../images/vricon_ortho_blue_cutout.png")
+im_red = cv2.imread("../images/vricon_ortho_red_cutout.png")
+im_green = cv2.imread("../images/vricon_ortho_green_cutout.png")
+im_nir = cv2.imread("../images/vricon_ortho_nir_cutout.png")
 
 
 # Create a RGB image 
@@ -151,7 +151,7 @@ arrayImage[14,:]= np.divide(arrayImage[14,:],np.amax(arrayImage[14,:]))
 arrayImage[15,:]= np.divide(arrayImage[15,:],np.amax(arrayImage[15,:]))
 
 #Save data to file
-np.save("features", arrayImage)
+np.save("featuresTraining", arrayImage)
 
 #Display features
 #cv2.imshow("contrast", contrast)
