@@ -1,25 +1,27 @@
-from network import Network 
+from network2 import Network 
+from utils4 import Utils
 from osgeo import gdal
 from matplotlib import pyplot as plt
 import mnist_loader
 import numpy as np
 import random
 import cv2
-import utils3
-
 
 def main():
 
 	block_dim = 4
-	input_layer = 4
-	hidden_layer = 10
+	input_layer = 16
+	hidden_layer = 30
 	output_layer = 3
 
-	training_data, test_data, label_weights = utils3.load_data(block_dim)
+
+	utils = Utils(block_dim, input_layer, output_layer)
+
+	training_data, test_data = utils.load_data()
 	net = Network([input_layer,hidden_layer,output_layer])
+
+	net.SGD(training_data, 5, 10, 3.0,lmbda=0.3, evaluation_data = test_data, monitor_training_accuracy=True, monitor_evaluation_accuracy=True)
 	
-	net.SGD(training_data, 10, 10, 3.0,label_weights, test_data = test_data)
-	
-	utils3.createImage(net, block_dim)
+	utils.createImage(net, test_data)
 	
 main()
