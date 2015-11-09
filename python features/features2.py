@@ -37,6 +37,7 @@ def gaussFilt(im,filt_const):
 	return image
 
 
+
 levels = 16 #greyscale levels
 N = 4 #blockssize
 num_im=4
