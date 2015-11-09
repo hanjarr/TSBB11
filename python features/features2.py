@@ -41,6 +41,7 @@ N = 4 #blockssize
 num_im=4
 file_name="f16_g128_b4_train"
 
+
 global num_imfeatures
 num_imfeatures=4
 
