@@ -1,4 +1,4 @@
-import numpy as np 
+import numpy as np
 import cv2
 import os
 import glob
@@ -103,7 +103,9 @@ class Utils(object):
     def createImage(self, network, test_data):
 
 		test_results = [(np.argmax(network.feedforward(x)), y)	for (x, y) in test_data]
-
+		
+		block_dim = self.block_dim
+		
 		resultDim = len(test_results)
 		imDim = np.sqrt(resultDim)
 		resultImage = np.zeros((int(imDim),int(imDim),3))
@@ -117,17 +119,35 @@ class Utils(object):
 				v=v+1
 		test_image = np.multiply(np.array(resultImage[:,:,:]),255).astype(np.uint8)
 		
-		im = Image.fromarray(test_image)
-		im.save('test.png')
-
+		image_resize = cv2.resize(test_image, (0,0), fx=4, fy=4) 
+		result_image = Image.fromarray(image_resize)
+		result_image.save('result.png')
+		
+		# ----- Blending images: Funkar inte riktigt...
+		vricon_image = cv2.imread("../images/test_blue.png")
+		
+		result_pil = Image.open("result.png")
+		arr = cv2.imread("test_blue.png")
+		vricon_pil = Image.fromarray(arr)
+		result_pil = result_pil.convert("RGBA")
+		vricon_pil = vricon_pil.convert("RGBA")
+		print result_pil.mode
+		print vricon_pil.mode
+		
+		blend_pil = Image.alpha_composite(vricon_pil,result_pil).save("blended_pil.png")
+		
+		blend_array = cv2.addWeighted(image_resize,0.2,vricon_image,0.8,0)
+		blend_image = Image.fromarray(blend_array)
+		blend_image.save("blended.png")
+		
 	    #cv2.imshow("RESULTAT", test_image)
 	    #cv2.waitKey(0)
 
     def load_data(self):
 
     	'''Load osm images for training and test (validation)'''
-    	training_osm = cv2.imread("training_osm.png")[:,:,0]
-    	test_osm =cv2.imread("test_osm.png")[:,:,0]
+    	training_osm = cv2.imread("../images/train_osm.png")[:,:,0]
+    	test_osm =cv2.imread("../images/test_osm.png")[:,:,0]
 
     	training_data = self.configureData(training_osm, "../python features/trainingFeatures.npy", training=True)
     	test_data = self.configureData(test_osm, "../python features/testFeatures.npy")
