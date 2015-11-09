@@ -4,6 +4,7 @@ import scipy
 import skimage
 import scipy.ndimage.filters as sf
 from skimage.feature import greycomatrix, greycoprops
+from PIL import Image
 
 np.set_printoptions(threshold = np.nan)
 
@@ -22,27 +23,28 @@ def imStats(image_block,levels):
 	for index,measure in enumerate(measures):
 		feature_arrays[index] = greycoprops(weightingOPP,measure)
 	
-	feature_arrays[num_imfeatures-1]=image_block.mean()
+	#feature_arrays[num_imfeatures-1]=image_block.mean()
 	return feature_arrays
 
 
 
 def gaussFilt(im,filt_const):
 	image = im
-	image[:,:,0] = sf.gaussian_filter(im_green[:,:,0], filt_const)
-	image[:,:,1] = sf.gaussian_filter(im_green[:,:,1], filt_const)
-	image[:,:,2] = sf.gaussian_filter(im_green[:,:,2], filt_const)
+	image[:,:,0] = sf.gaussian_filter(im[:,:,0], filt_const)
+	image[:,:,1] = sf.gaussian_filter(im[:,:,1], filt_const)
+	image[:,:,2] = sf.gaussian_filter(im[:,:,2], filt_const)
 
 	return image
 
 
-levels =64 #greyscale levels
+levels = 16 #greyscale levels
 N = 4 #blockssize
-num_im=5
-file_name="train_64grey_25features"
+num_im=4
+gaussNr=16
+file_name="f16_g16_b4_gau16_Test"
 
 global num_imfeatures
-num_imfeatures=5
+num_imfeatures=4
 
 
 #constants
@@ -51,25 +53,37 @@ div=256/levels
 
 
 # Import the images
-im_blue = cv2.imread("test_blue.png")
-im_red = cv2.imread("test_red.png")
-im_green = cv2.imread("test_green.png")
-im_nir = cv2.imread("test_nir.png")
-im_pan=cv2.imread("test_pan.png")
+im_blue = cv2.imread("../images/test_blue.png")
+im_red = cv2.imread("../images/test_red.png")
+im_green = cv2.imread("../images/test_green.png")
+im_nir = cv2.imread("../images/test_nir.png")
+#im_pan=cv2.imread("../images/train_pan.png")
 
 # Filtrating the image
-inImageR = gaussFilt(im_red,8)
-inImageG = gaussFilt(im_green,8)
-inImageB = gaussFilt(im_blue,8)
-inImageN = gaussFilt(im_nir,8)
-inImageP = gaussFilt(im_pan,8)
+inImageR = gaussFilt(im_red,gaussNr)
+inImageG = gaussFilt(im_green,gaussNr)
+inImageB = gaussFilt(im_blue,gaussNr)
+inImageN = gaussFilt(im_nir,gaussNr)
+#inImageP = gaussFilt(im_pan,8)
+
+imGaussRed = Image.fromarray(inImageR)
+imGaussRed.save('gaussRed16Test.png')
+
+imGaussGreen = Image.fromarray(inImageG)
+imGaussGreen.save('gaussGreen16Test.png')
+
+imGaussBlue = Image.fromarray(inImageB)
+imGaussBlue.save('gaussBlue16Test.png')
+
+imGaussNir = Image.fromarray(inImageN)
+imGaussNir.save('gaussNir16Test.png')
 
 #
 totalImageR = np.divide(inImageR[:,:,0]+inImageR[:,:,1]+inImageR[:,:,2],3.0)
 totalImageG = np.divide(inImageG[:,:,0]+inImageG[:,:,1]+inImageG[:,:,2],3.0)
 totalImageB = np.divide(inImageB[:,:,0]+inImageB[:,:,1]+inImageB[:,:,2],3.0)
 totalImageN = np.divide(inImageN[:,:,0]+inImageN[:,:,1]+inImageN[:,:,2],3.0)
-totalImageP = np.divide(inImageP[:,:,0]+inImageP[:,:,1]+inImageP[:,:,2],3.0)
+#totalImageP = np.divide(inImageP[:,:,0]+inImageP[:,:,1]+inImageP[:,:,2],3.0)
 
 # Variables 
 inImSize = np.shape(totalImageR)
@@ -80,7 +94,7 @@ imageR = totalImageR[1:upperLimits[0],1:upperLimits[1]]/div
 imageG = totalImageG[1:upperLimits[0],1:upperLimits[1]]/div
 imageB = totalImageB[1:upperLimits[0],1:upperLimits[1]]/div
 imageN = totalImageN[1:upperLimits[0],1:upperLimits[1]]/div
-imageP = totalImageP[1:upperLimits[0],1:upperLimits[1]]/div
+#imageP = totalImageP[1:upperLimits[0],1:upperLimits[1]]/div
 # An empty image
 arrayImage = np.zeros((num_features,(upperLimits[1]/N)*(upperLimits[0]/N)))
 
@@ -100,16 +114,17 @@ for i in range(0,int(upperLimits[0]-N), N):
 		extImage = imageN[i:i+N, k:k+N]
 		statsN = imStats(extImage,levels)
 		
-		extImage = imageP[i:i+N, k:k+N]
-		statsP = imStats(extImage,levels)
+		#extImage = imageP[i:i+N, k:k+N]
+		#statsP = imStats(extImage,levels)
 
 		statsTemp = np.append(statsR, statsG)
 		statsTemp2 = np.append(statsB, statsN)
 		
-		stats = np.append(np.append(statsTemp, statsTemp2),statsP)
+		stats = np.append(statsTemp, statsTemp2)
 		
 		#Reshape to array
 		arrayImage[:,k/N+(i*(upperLimits[1])/N**2)] = stats
+		
 		
 	print i/(upperLimits[0]-N)
 
@@ -121,6 +136,6 @@ for j in range(0,num_features-1):
 #Save data to file
 np.save(file_name, arrayImage)
 
-print "Complete"
+print "GRATTIS <3"
 
 
