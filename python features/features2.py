@@ -4,6 +4,7 @@ import scipy
 import skimage
 import scipy.ndimage.filters as sf
 from skimage.feature import greycomatrix, greycoprops
+from PIL import Image
 
 np.set_printoptions(threshold = np.nan)
 
@@ -36,11 +37,12 @@ def gaussFilt(im,filt_const):
 	return image
 
 
-levels = 128 #greyscale levels
+
+levels = 16 #greyscale levels
 N = 4 #blockssize
 num_im=4
-file_name="f24_g128_b4_train"
-
+gaussNr=16
+file_name="f16_g16_b4_gau16_Test"
 
 global num_imfeatures
 num_imfeatures=7
@@ -52,18 +54,30 @@ div=256/levels
 
 
 # Import the images
-im_blue = cv2.imread("../images/train_blue.png")
-im_red = cv2.imread("../images/train_red.png")
-im_green = cv2.imread("../images/train_green.png")
-im_nir = cv2.imread("../images/train_nir.png")
-#im_pan=cv2.imread("test_pan.png")
+im_blue = cv2.imread("../images/test_blue.png")
+im_red = cv2.imread("../images/test_red.png")
+im_green = cv2.imread("../images/test_green.png")
+im_nir = cv2.imread("../images/test_nir.png")
+#im_pan=cv2.imread("../images/train_pan.png")
 
 # Filtrating the image
-inImageR = gaussFilt(im_red,8)
-inImageG = gaussFilt(im_green,8)
-inImageB = gaussFilt(im_blue,8)
-inImageN = gaussFilt(im_nir,8)
+inImageR = gaussFilt(im_red,gaussNr)
+inImageG = gaussFilt(im_green,gaussNr)
+inImageB = gaussFilt(im_blue,gaussNr)
+inImageN = gaussFilt(im_nir,gaussNr)
 #inImageP = gaussFilt(im_pan,8)
+
+imGaussRed = Image.fromarray(inImageR)
+imGaussRed.save('gaussRed16Test.png')
+
+imGaussGreen = Image.fromarray(inImageG)
+imGaussGreen.save('gaussGreen16Test.png')
+
+imGaussBlue = Image.fromarray(inImageB)
+imGaussBlue.save('gaussBlue16Test.png')
+
+imGaussNir = Image.fromarray(inImageN)
+imGaussNir.save('gaussNir16Test.png')
 
 #
 totalImageR = np.divide(inImageR[:,:,0]+inImageR[:,:,1]+inImageR[:,:,2],3.0)
@@ -112,6 +126,7 @@ for i in range(0,int(upperLimits[0]-N), N):
 		#Reshape to array
 		arrayImage[:,k/N+(i*(upperLimits[1])/N**2)] = stats
 		
+		
 	print i/(upperLimits[0]-N)
 
 #normalize data 
@@ -122,6 +137,6 @@ for j in range(0,num_features-1):
 #Save data to file
 np.save(file_name, arrayImage)
 
-print "Complete"
+print "GRATTIS <3"
 
 
