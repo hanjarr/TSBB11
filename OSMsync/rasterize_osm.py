@@ -105,7 +105,7 @@ else:
 print '---------- Extract OSM data ----------'
 if download_new_osm_data == 1:
 	print 'Downloading new OSM file'
-	print 'OSM data bounds:' + latlong_min[0] + ',' + latlong_min[1] + ',' + latlong_max[0] + ',' + latlong_max[1]
+	print 'OSM data bounds: ' + str(latlong_min[0]) + ',' + str(latlong_min[1]) + ',' + str(latlong_max[0]) + ',' + str(latlong_max[1])
 	api_query = "http://www.overpass-api.de/api/xapi_meta?*%5Bbbox=" + str(latlong_min[0]) + "," + str(latlong_min[1]) + "," + str(latlong_max[0]) + "," + str(latlong_max[1]) + "%5D"
 	osm_xml = urllib.urlopen(api_query).read()
 	print 'Write OSM data to file'
@@ -114,7 +114,12 @@ if download_new_osm_data == 1:
 	osmfile.close()
 	print 'Created OSM file:', osm_file
 else:
-	print 'Using old OSM file:', osm_file
+	if os.path.exists(osm_file):
+		print 'Using old OSM file:', osm_file
+	else:
+		print "Tried to use old OSM file, but file not found:", osm_file
+		print "---------- Exit ----------"
+		sys.exit()
 
 # ---------------------------------------------------------------
 # Generate shape files from osm
@@ -194,6 +199,9 @@ target_ds.GetRasterBand(1).WriteArray( raster )
 gdal.RasterizeLayer(target_ds, [1], transformed_layer[1], burn_values = [120], options = ["ALL_TOUCHED=FALSE", "MERGE_ALG=ADD"]) # For color: Change to 3 bands and 3 values
 # Write to file
 gdal.GetDriverByName('PNG').CreateCopy(output_rasterized_file,target_ds)
+target_ds = None
+f = open(output_rasterized_file)
+f.close
 
 # ---------------------------------------------------------------
 # Draw line objects to image file with OpenCV
@@ -217,7 +225,6 @@ def build_point_list( input_shape_data ):
 			y = (point[1]-gt[3])/gt[5]
 			points.append([int(x),int(y)])
 		geometries.append(points)
-	print len(geometries)
 	return geometries
 
 def draw_solid_line(geometries, width, color ):
