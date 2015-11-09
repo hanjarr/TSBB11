@@ -10,7 +10,7 @@ np.set_printoptions(threshold = np.nan)
 def imStats(image_block,levels):
 	pixel_pairs = greycomatrix(image_block, [1], [0, np.pi/4, np.pi/2, 3*np.pi/4 ], levels, normed = False)
 	pixel_pairs = np.array(pixel_pairs,dtype=np.float)
-	measures = ['contrast','correlation','energy','homogeneity']
+	measures = ['contrast', 'dissimilarity', 'homogeneity', 'energy', 'correlation', 'ASM']
 	
 	numberOPP = [np.sum(pixel_pairs[:,:,:,0]), np.sum(pixel_pairs[:,:,:,1]), np.sum(pixel_pairs[:,:,:,2]), np.sum(pixel_pairs[:,:,:,3])]
 
@@ -22,7 +22,7 @@ def imStats(image_block,levels):
 	for index,measure in enumerate(measures):
 		feature_arrays[index] = greycoprops(weightingOPP,measure)
 	
-	#feature_arrays[num_imfeatures-1]=image_block.mean()
+	feature_arrays[num_imfeatures-1]=image_block.mean()
 	return feature_arrays
 
 
@@ -39,11 +39,11 @@ def gaussFilt(im,filt_const):
 levels = 128 #greyscale levels
 N = 4 #blockssize
 num_im=4
-file_name="f16_g128_b4_train"
+file_name="f24_g128_b4_train"
 
 
 global num_imfeatures
-num_imfeatures=4
+num_imfeatures=7
 
 
 #constants
@@ -85,7 +85,7 @@ imageN = totalImageN[1:upperLimits[0],1:upperLimits[1]]/div
 # An empty image
 arrayImage = np.zeros((num_features,(upperLimits[1]/N)*(upperLimits[0]/N)))
 
-# Creating features contrast, energy, correlation, homogeneity,mean
+# Creating features 'contrast', 'dissimilarity', 'homogeneity', 'energy', 'correlation', 'ASM', mean
 for i in range(0,int(upperLimits[0]-N), N):
 	for k in range (0,int(upperLimits[1]-N), N):
 		

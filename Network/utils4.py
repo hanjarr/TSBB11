@@ -118,7 +118,7 @@ class Utils(object):
 		test_image = np.multiply(np.array(resultImage[:,:,:]),255).astype(np.uint8)
 		
 		im = Image.fromarray(test_image)
-		im.save('test.png')
+		im.save('f24_g128_b4_2.png')
 
 	    #cv2.imshow("RESULTAT", test_image)
 	    #cv2.waitKey(0)
@@ -126,10 +126,10 @@ class Utils(object):
     def load_data(self):
 
     	'''Load osm images for training and test (validation)'''
-    	training_osm = cv2.imread("training_osm.png")[:,:,0]
-    	test_osm =cv2.imread("test_osm.png")[:,:,0]
+    	training_osm = cv2.imread("../images/train_osm.png")[:,:,0]
+    	test_osm =cv2.imread("../images/test_osm.png")[:,:,0]
 
-    	training_data = self.configureData(training_osm, "../python features/trainingFeatures.npy", training=True)
-    	test_data = self.configureData(test_osm, "../python features/testFeatures.npy")
+    	training_data = self.configureData(training_osm, "../python features/f24_g128_b4_train.npy", training=True)
+    	test_data = self.configureData(test_osm, "../python features/f24_g128_b4_test.npy")
 
     	return (training_data,test_data)

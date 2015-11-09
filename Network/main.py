@@ -10,8 +10,8 @@ import cv2
 def main():
 
 	block_dim = 4
-	input_layer = 16
-	hidden_layer = 30
+	input_layer = 24
+	hidden_layer = 48
 	output_layer = 3
 
 
@@ -20,7 +20,7 @@ def main():
 	training_data, test_data = utils.load_data()
 	net = Network([input_layer,hidden_layer,output_layer])
 
-	net.SGD(training_data, 5, 10, 3.0,lmbda=0.3, evaluation_data = test_data, monitor_training_accuracy=True, monitor_evaluation_accuracy=True)
+	net.SGD(training_data, 5, 10, 0.1,lmbda=0.3, evaluation_data = test_data, monitor_training_accuracy=True, monitor_evaluation_accuracy=True)
 	
 	utils.createImage(net, test_data)
 	
