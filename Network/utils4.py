@@ -125,24 +125,24 @@ class Utils(object):
 		result_image.save('result.png')
 		
 		# ----- Blending images: Funkar inte riktigt...
-		vricon_image = cv2.imread("../images/test_blue.png")
+		#vricon_image = cv2.imread("../images/test_blue.png")
 		
-		result_pil = Image.open("result.png")
-		arr = cv2.imread("test_blue.png")
-		vricon_pil = Image.fromarray(arr)
-		result_pil = result_pil.convert("RGBA")
-		vricon_pil = vricon_pil.convert("RGBA")
-		print result_pil.mode
-		print vricon_pil.mode
+		#result_pil = Image.open("result.png")
+		#arr = cv2.imread("test_blue.png")
+		#vricon_pil = Image.fromarray(arr)
+		#result_pil = result_pil.convert("RGBA")
+		#vricon_pil = vricon_pil.convert("RGBA")
+		#print result_pil.mode
+		#print vricon_pil.mode
 		
-		blend_pil = Image.alpha_composite(vricon_pil,result_pil).save("blended_pil.png")
+		#blend_pil = Image.alpha_composite(vricon_pil,result_pil).save("blended_pil.png")
 		
-		blend_array = cv2.addWeighted(image_resize,0.2,vricon_image,0.8,0)
-		blend_image = Image.fromarray(blend_array)
-		blend_image.save("blended.png")
+		#blend_array = cv2.addWeighted(image_resize,0.2,vricon_image,0.8,0)
+		#blend_image = Image.fromarray(blend_array)
+		#blend_image.save("blended.png")
 		
 		im = Image.fromarray(test_image)
-		im.save('f16_g16_b4_gau16.png')
+		im.save('f28_g64_b4_gau6_0.png')
 		
 	    #cv2.imshow("RESULTAT", test_image)
 	    #cv2.waitKey(0)
@@ -153,8 +153,8 @@ class Utils(object):
     	training_osm = cv2.imread("../images/train_osm.png")[:,:,0]
     	test_osm =cv2.imread("../images/test_osm.png")[:,:,0]
 
-    	training_data = self.configureData(training_osm, "../python features/SavedImages/f16_g16_b4_gau16_train.npy", training=True)
-    	test_data = self.configureData(test_osm, "../python features/SavedImages/f16_g16_b4_gau16_Test.npy")
+    	training_data = self.configureData(training_osm, "../python features/f28_g64_b4_gau6_train.npy", training=True)
+    	test_data = self.configureData(test_osm, "../python features/f28_g64_b4_gau6_test.npy")
 
 
     	return (training_data,test_data)
