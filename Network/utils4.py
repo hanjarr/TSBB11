@@ -142,7 +142,7 @@ class Utils(object):
 		#blend_image.save("blended.png")
 		
 		im = Image.fromarray(test_image)
-		im.save('f35_g128_b4_gau6_0001_20_35ne.png')
+		im.save('f35_g128_b4_gau6_0001_20_2-60ne.png')
 		
 	    #cv2.imshow("RESULTAT", test_image)
 	    #cv2.waitKey(0)
@@ -153,8 +153,8 @@ class Utils(object):
     	training_osm = cv2.imread("../images/train_osm.png")[:,:,0]
     	test_osm =cv2.imread("../images/test_osm.png")[:,:,0]
 
-    	training_data = self.configureData(training_osm, "../python features/f35_g128_b4_gau6_train.npy", training=True)
-    	test_data = self.configureData(test_osm, "../python features/f35_g128_b4_gau6_test.npy")
+    	training_data = self.configureData(training_osm, "../python features/graylevels/f35_g128_b4_gau6_train.npy", training=True)
+    	test_data = self.configureData(test_osm, "../python features/graylevels/f35_g128_b4_gau6_test.npy")
 
 
     	return (training_data,test_data)

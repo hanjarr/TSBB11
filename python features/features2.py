@@ -52,14 +52,14 @@ def featureExt(tType):
 	im_red = cv2.imread("../images/"+tType+"_red.png")
 	im_green = cv2.imread("../images/"+tType+"_green.png")
 	im_nir = cv2.imread("../images/"+tType+"_nir.png")
-	im_pan=cv2.imread("../images/train_pan.png")
+	im_pan=cv2.imread("../images/"+tType+"_pan.png")
 
 	# Filtrating the image
 	inImageR = gaussFilt(im_red,gaussNr)
 	inImageG = gaussFilt(im_green,gaussNr)
 	inImageB = gaussFilt(im_blue,gaussNr)
 	inImageN = gaussFilt(im_nir,gaussNr)
-	inImageP = gaussFilt(im_pan,8)
+	inImageP = gaussFilt(im_pan,gaussNr)
 
 	imGaussRed = Image.fromarray(inImageR)
 	imGaussRed.save('gaussRed16Test.png')
@@ -85,17 +85,17 @@ def featureExt(tType):
 
 	upperLimits = np.array([np.floor(inImSize[0]/N)*N, np.floor(inImSize[1]/N)*N])
 
-	imageR = totalImageR[0:upperLimits[0],0:upperLimits[1]]/div
-	imageG = totalImageG[0:upperLimits[0],0:upperLimits[1]]/div
-	imageB = totalImageB[0:upperLimits[0],0:upperLimits[1]]/div
-	imageN = totalImageN[0:upperLimits[0],0:upperLimits[1]]/div
-	imageP = totalImageP[1:upperLimits[0],1:upperLimits[1]]/div
+	imageR = np.floor(totalImageR[0:upperLimits[0],0:upperLimits[1]]/div)
+	imageG = np.floor(totalImageG[0:upperLimits[0],0:upperLimits[1]]/div)
+	imageB = np.floor(totalImageB[0:upperLimits[0],0:upperLimits[1]]/div)
+	imageN = np.floor(totalImageN[0:upperLimits[0],0:upperLimits[1]]/div)
+	imageP = np.floor(totalImageP[0:upperLimits[0],0:upperLimits[1]]/div)
 	# An empty image
 	arrayImage = np.zeros((num_features,(upperLimits[1]/N)*(upperLimits[0]/N)))
 
 	# Creating features 'contrast', 'dissimilarity', 'homogeneity', 'energy', 'correlation', 'ASM', mean
-	for i in range(0,int(upperLimits[0]-N), N):
-		for k in range (0,int(upperLimits[1]-N), N):
+	for i in range(0,int(upperLimits[0]), N):
+		for k in range (0,int(upperLimits[1]), N):
 			
 			extImage = imageR[i:i+N, k:k+N]
 			statsR = imStats(extImage,levels)
@@ -139,7 +139,7 @@ def featureExt(tType):
 levels = 128 		#greyscale levels
 N = 4 				#blockssize
 num_im=5			#nbr Images
-gaussNr=6			#gauss Sigma
+gaussNr=4			#gauss Sigma
 num_imfeatures=7	#total nbr of features per image
 
 featureExt("train")
