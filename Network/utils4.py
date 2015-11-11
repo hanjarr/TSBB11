@@ -2,6 +2,7 @@ import numpy as np
 import cv2
 import os
 import glob
+import math
 from PIL import Image
 
 np.set_printoptions(threshold=np.nan)
@@ -47,7 +48,7 @@ class Utils(object):
     	if training:
     		keys = [self.training_label(osm_arrays[:,x]) for x in xrange(0,num_blocks)]
     		training_data = zip(inputs,keys)
-    		input_data = self.reduceTrainingData(keys, training_data)
+    		input_data = self.duplicateTrainingData(keys, training_data)
     	else:
     		keys = [self.test_label(osm_arrays[:,x]) for x in xrange(0,num_blocks)]
     		input_data = zip(inputs,keys)
@@ -100,6 +101,26 @@ class Utils(object):
     		index=index+1
     	return reduced_data
 
+    def duplicateTrainingData(self, keys, training_data):
+
+        num_keys = sum(keys)
+        max_key = np.max(num_keys)
+
+        duplicated_data = []
+
+        for i in range(0,len(num_keys)):
+            separated_data = range(num_keys[i])
+            duplication = int(math.ceil(max_key/num_keys[i]))
+            index = 0
+
+            for k in range(0,sum(num_keys)):
+                if (keys[k][i] == 1):
+                    separated_data[index] = training_data[k]
+                    index += 1
+            separated_data = separated_data*duplication
+            duplicated_data += separated_data
+        return duplicated_data
+
     def createImage(self, network, test_data):
 
 		test_results = [(np.argmax(network.feedforward(x)), y)	for (x, y) in test_data]
@@ -136,9 +157,6 @@ class Utils(object):
 		im = Image.fromarray(test_image)
 		im.save('f35_g128_b4_gau6_0001_20_35ne.png')
 
-		
-	    #cv2.imshow("RESULTAT", test_image)
-	    #cv2.waitKey(0)
 
     def load_data(self):
 
