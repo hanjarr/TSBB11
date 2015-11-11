@@ -52,14 +52,14 @@ def featureExt(tType):
 	im_red = cv2.imread("../images/"+tType+"_red.png")
 	im_green = cv2.imread("../images/"+tType+"_green.png")
 	im_nir = cv2.imread("../images/"+tType+"_nir.png")
-	#im_pan=cv2.imread("../images/train_pan.png")
+	im_pan=cv2.imread("../images/train_pan.png")
 
 	# Filtrating the image
 	inImageR = gaussFilt(im_red,gaussNr)
 	inImageG = gaussFilt(im_green,gaussNr)
 	inImageB = gaussFilt(im_blue,gaussNr)
 	inImageN = gaussFilt(im_nir,gaussNr)
-	#inImageP = gaussFilt(im_pan,8)
+	inImageP = gaussFilt(im_pan,8)
 
 	imGaussRed = Image.fromarray(inImageR)
 	imGaussRed.save('gaussRed16Test.png')
@@ -73,12 +73,12 @@ def featureExt(tType):
 	imGaussNir = Image.fromarray(inImageN)
 	imGaussNir.save('gaussNir16Test.png')
 
-	#
+	
 	totalImageR = np.divide(inImageR[:,:,0]+inImageR[:,:,1]+inImageR[:,:,2],3.0)
 	totalImageG = np.divide(inImageG[:,:,0]+inImageG[:,:,1]+inImageG[:,:,2],3.0)
 	totalImageB = np.divide(inImageB[:,:,0]+inImageB[:,:,1]+inImageB[:,:,2],3.0)
 	totalImageN = np.divide(inImageN[:,:,0]+inImageN[:,:,1]+inImageN[:,:,2],3.0)
-	#totalImageP = np.divide(inImageP[:,:,0]+inImageP[:,:,1]+inImageP[:,:,2],3.0)
+	totalImageP = np.divide(inImageP[:,:,0]+inImageP[:,:,1]+inImageP[:,:,2],3.0)
 
 	# Variables 
 	inImSize = np.shape(totalImageR)
@@ -89,7 +89,7 @@ def featureExt(tType):
 	imageG = totalImageG[0:upperLimits[0],0:upperLimits[1]]/div
 	imageB = totalImageB[0:upperLimits[0],0:upperLimits[1]]/div
 	imageN = totalImageN[0:upperLimits[0],0:upperLimits[1]]/div
-	#imageP = totalImageP[1:upperLimits[0],1:upperLimits[1]]/div
+	imageP = totalImageP[1:upperLimits[0],1:upperLimits[1]]/div
 	# An empty image
 	arrayImage = np.zeros((num_features,(upperLimits[1]/N)*(upperLimits[0]/N)))
 
@@ -109,13 +109,13 @@ def featureExt(tType):
 			extImage = imageN[i:i+N, k:k+N]
 			statsN = imStats(extImage,levels)
 			
-			#extImage = imageP[i:i+N, k:k+N]
-			#statsP = imStats(extImage,levels)
+			extImage = imageP[i:i+N, k:k+N]
+			statsP = imStats(extImage,levels)
 
 			statsTemp = np.append(statsR, statsG)
 			statsTemp2 = np.append(statsB, statsN)
 			
-			stats = np.append(statsTemp, statsTemp2)
+			stats = np.append(np.append(statsTemp, statsTemp2), statsP)
 			
 			#Reshape to array
 			arrayImage[:,k/N+(i*(upperLimits[1])/N**2)] = stats
@@ -136,9 +136,9 @@ def featureExt(tType):
 
 	
 #ANDRA ENDAST DESSA VARDEN, STRANGAR OCH SOKVAGAR FIXAR SIG SJALVA
-levels = 64 		#greyscale levels
+levels = 128 		#greyscale levels
 N = 4 				#blockssize
-num_im=4			#nbr Images
+num_im=5			#nbr Images
 gaussNr=6			#gauss Sigma
 num_imfeatures=7	#total nbr of features per image
 
