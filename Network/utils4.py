@@ -118,31 +118,24 @@ class Utils(object):
 				u=0
 				v=v+1
 		test_image = np.multiply(np.array(resultImage[:,:,:]),255).astype(np.uint8)
-
-
-		image_resize = cv2.resize(test_image, (0,0), fx=4, fy=4) 
+	
+		# Scale up output image by block_dim
+		image_resize = cv2.resize(test_image, (0,0), fx=block_dim, fy=block_dim) 
 		result_image = Image.fromarray(image_resize)
 		result_image.save('result.png')
 		
-		# ----- Blending images: Funkar inte riktigt...
-		#vricon_image = cv2.imread("../images/test_blue.png")
+		# Blend result image with source image
+		weight = 0.7 # Weight of source image in blended image, [0.0 - 1.0]
 		
-		#result_pil = Image.open("result.png")
-		#arr = cv2.imread("test_blue.png")
-		#vricon_pil = Image.fromarray(arr)
-		#result_pil = result_pil.convert("RGBA")
-		#vricon_pil = vricon_pil.convert("RGBA")
-		#print result_pil.mode
-		#print vricon_pil.mode
+		vricon_image = cv2.imread("../images/test_blue.png")
+		blend_array = cv2.addWeighted(image_resize,1-weight,vricon_image,weight,0)
+		blend_image = Image.fromarray(blend_array)
+		blend_image.save("blended.png")
 		
-		#blend_pil = Image.alpha_composite(vricon_pil,result_pil).save("blended_pil.png")
-		
-		#blend_array = cv2.addWeighted(image_resize,0.2,vricon_image,0.8,0)
-		#blend_image = Image.fromarray(blend_array)
-		#blend_image.save("blended.png")
-		
+		# --- 
 		im = Image.fromarray(test_image)
-		im.save('f35_g128_b4_gau4_0001_20_2-60ne.png')
+		im.save('f35_g128_b4_gau6_0001_20_35ne.png')
+
 		
 	    #cv2.imshow("RESULTAT", test_image)
 	    #cv2.waitKey(0)
