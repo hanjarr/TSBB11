@@ -83,6 +83,7 @@ class Utils(object):
 	'''SORT OUT SAME AMOUNT OF EACH LABEL'''
 	def reduceTrainingData(self, training_data):
 
+		random.shuffle(training_data)
 		keys = [x[1] for x in training_data]
 
 		num_keys = sum(keys)
