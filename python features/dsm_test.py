@@ -30,6 +30,21 @@ for i in range(0,im2.shape[0],N):
         im_std[i/N,j/N] = np.std(box)
         #print im_std[i,j]
 
+#Load saved feature
+feature_array = np.load("code/python features/graylevels/f16_g128_b4_train.npy")
+print feature_array.shape
+im_std_array = np.reshape(im_std,[1,250000])
+print im_std_array.shape
+feature_array = np.append(feature_array,im_std_array,axis=0)
+print feature_array.shape
+
+np.save("f16_g128_b4_train.npy", feature_array)
+#Check is reshaped image is correct
+# ret_image = []
+# ret_array = feature_array[16,:]
+# im_ret = np.reshape(ret_array,[500,500])
+#print im_corr.shape
+
 plt.figure()
 io.imshow(im_std)
 plt.figure()
