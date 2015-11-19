@@ -19,7 +19,7 @@ import sys
 
 # Third-party libraries
 import numpy as np
-
+from operator import truediv
 
 #### Define the quadratic and cross-entropy cost functions
 
@@ -172,7 +172,7 @@ class Network(object):
 				print "Cost on training data: {}".format(cost)
 			if monitor_training_accuracy:
 				total, accuracy = self.accuracy(training_data, convert=True)
-				training_accuracy.append(accuracy)
+				training_accuracy = training_accuracy + accuracy
 				print "Accuracy on training data (Others, water, roads): " + "\n" + "{}".format(accuracy)
 				print "Accuracy on training data (total):{} % ".format(total)
 			if monitor_evaluation_cost:
@@ -181,7 +181,7 @@ class Network(object):
 				print "Cost on evaluation data: {}".format(cost)
 			if monitor_evaluation_accuracy:
 				total, accuracy = self.accuracy(evaluation_data)
-				evaluation_accuracy.append(accuracy)
+				evaluation_accuracy = evaluation_accuracy + accuracy
 				print "Accuracy on test data (Others, water, roads): " + "\n" + "{}".format(accuracy)
 				print "Accuracy on test data (total):{} % ".format(total)
 
@@ -274,19 +274,22 @@ class Network(object):
 		total= sum((x == y) for (x, y) in results)
 
 		total = total/float(len(results))*100		
-		correct_vec = np.zeros((self.sizes[-1],1))
-		labels = np.zeros((self.sizes[-1],1))
+		#correct_vec = np.zeros((self.sizes[-1],1))
+		#labels = np.zeros((self.sizes[-1],1))
+
+		correct_list = []
+		labels = []
 
 		for i in range(0,self.sizes[-1]):
 			correct = 0
-			labels[i] = sum(int(y == i) for (x, y) in results)
+			labels.append(sum(int(y == i) for (x, y) in results))
 			for (x,y) in results:
 				if (x == y and x == i):
 					correct += 1
-			correct_vec[i] = correct
-		correct_vec = correct_vec/labels*100
+			correct_list.append(correct)
+		correct_list = map(truediv, correct_list, labels)
 
-		return (total,correct_vec)
+		return (total,correct_list)
 
 
 	def total_cost(self, data, lmbda, convert=False):
