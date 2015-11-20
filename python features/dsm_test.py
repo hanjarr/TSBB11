@@ -11,8 +11,12 @@ im = skimage.io.imread('0_1_0_dsm.tif', plugin='tifffile')
 threshold = 5
 idx = im[:,:] < threshold
 im[idx] = 0
-im2 = im[1000:3000,1000:3000]
-im3 = im[992:3008,992:3008]
+im2 = im[1000:2000,2000:3000]
+#im2 = im[5500:7500, 1500:3500]
+# test 1000:2000, 2000:3000
+# train 5500:7500, 1500:3500
+im3 = im[992:2008,1992:3008]
+#im3 = im[4492:7508, 1492:3508]
 print im2.shape[0]
 #np.set_printoptions(threshold = np.nan)
 #im2 = np.floor(im2)
@@ -25,20 +29,20 @@ print im_std.shape
 for i in range(0,im2.shape[0],N):
     print i
     for j in range(0,im2.shape[1],N):
-        #print j'
-        box = im3[i-N:i+2*N,j-N:j+2*N]
+        box = im3[i-N+8:i+2*N+8,j-N+8:j+2*N+8]
         im_std[i/N,j/N] = np.std(box)
         #print im_std[i,j]
 
 #Load saved feature
-feature_array = np.load("code/python features/graylevels/f16_g128_b4_train.npy")
+feature_array = np.load("graylevels/f35_g128_b4_gau4_test.npy")
 print feature_array.shape
-im_std_array = np.reshape(im_std,[1,250000])
-print im_std_array.shape
+im_std_array = np.reshape(im_std,[1,62500])
+im_std_array /= np.amax(im_std_array)
+print im_std_array
 feature_array = np.append(feature_array,im_std_array,axis=0)
 print feature_array.shape
 
-np.save("f16_g128_b4_train.npy", feature_array)
+np.save("f36_g128_b4_gau4_test.npy", feature_array)
 #Check is reshaped image is correct
 # ret_image = []
 # ret_array = feature_array[16,:]
