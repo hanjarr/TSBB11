@@ -4,6 +4,7 @@ import os
 import glob
 import math
 import random
+import scipy.ndimage.filters as sf
 from PIL import Image
 
 np.set_printoptions(threshold=np.nan)
@@ -129,7 +130,28 @@ class Utils(object):
 			duplicated_data += separated_data
 		random.shuffle(duplicated_data)
 		return duplicated_data
+		
+	def postProcessG(self, inImage):
+		stl = np.shape(inImage)
+		image = np.zeros(stl)
+		image[:,:,0] = sf.gaussian_filter(inImage[:,:,0], 10)
+		image[:,:,1] = sf.gaussian_filter(inImage[:,:,1], 5)
+		image[:,:,2] = sf.gaussian_filter(inImage[:,:,2], 1.5)
 
+		imSize = np.shape(image)
+
+		for i in range(0,imSize[0]):
+			for k in range(0,imSize[1]):
+				maxValue = np.amax(image[i,k,:])
+				for l in range(0,3):
+					if(image[i,k,l] == maxValue):
+						image[i,k,l] = 255
+					else:
+						image[i,k,l] = 0			
+		
+		image = Image.fromarray(image.astype(np.uint8))
+		image.save('processedG.png')
+		
 	def createImage(self, network, test_data):
 
 		test_results = [(np.argmax(network.feedforward(x)), y)	for (x, y) in test_data]
@@ -145,7 +167,9 @@ class Utils(object):
 			if(u==imDim):
 				u=0
 				v=v+1
+					
 		test_image = np.multiply(np.array(resultImage[:,:,:]),255).astype(np.uint8)
+		self.postProcessG(test_image)
 		
 		block_dim = self.block_dim
 		
