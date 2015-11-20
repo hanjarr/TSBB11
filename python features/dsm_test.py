@@ -34,6 +34,7 @@ for i in range(0,im2.shape[0],N):
         #print im_std[i,j]
 
 #Load saved feature
+
 feature_array = np.load("graylevels/f35_g128_b4_gau4_test.npy")
 print feature_array.shape
 im_std_array = np.reshape(im_std,[1,62500])
@@ -43,6 +44,7 @@ feature_array = np.append(feature_array,im_std_array,axis=0)
 print feature_array.shape
 
 np.save("f36_g128_b4_gau4_test.npy", feature_array)
+
 #Check is reshaped image is correct
 # ret_image = []
 # ret_array = feature_array[16,:]
