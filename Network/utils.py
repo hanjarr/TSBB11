@@ -16,7 +16,7 @@ class Utils(object):
 		self.num_features = num_features
 		self.num_classes = num_classes
 
-	def split_image(self, image_array, num_blocks):
+	def splitImage(self, image_array, num_blocks):
 
 		block_dim = self.block_dim
 		image_blocks = np.zeros((block_dim,block_dim,num_blocks))
@@ -37,7 +37,7 @@ class Utils(object):
 		num_blocks = dim**2/(self.block_dim**2)
 
 		'''Divide osm image into blocks '''
-		osm_blocks = self.split_image(osm, num_blocks)
+		osm_blocks = self.splitImage(osm, num_blocks)
 
 
 		'''Load features for training and testing'''
@@ -48,15 +48,15 @@ class Utils(object):
 
 		inputs = [np.reshape(feature_array[:,y],(self.num_features,1)) for y in xrange(0,num_blocks)]
 		if training:
-			keys = [self.training_label(osm_arrays[:,x]) for x in xrange(0,num_blocks)]
+			keys = [self.trainingLabel(osm_arrays[:,x]) for x in xrange(0,num_blocks)]
 			training_data = zip(inputs,keys)
 			input_data = self.reduceTrainingData(training_data)
 		else:
-			keys = [self.test_label(osm_arrays[:,x]) for x in xrange(0,num_blocks)]
+			keys = [self.testLabel(osm_arrays[:,x]) for x in xrange(0,num_blocks)]
 			input_data = zip(inputs,keys)
 		return input_data
 
-	def training_label(self, label_array):
+	def trainingLabel(self, label_array):
 		class_array = np.zeros((self.num_classes,1))
 		counts = np.bincount(label_array)
 		block_class = np.argmax(counts)
@@ -69,7 +69,7 @@ class Utils(object):
 		return class_array
 
 
-	def test_label(self, label_array):
+	def testLabel(self, label_array):
 		counts = np.bincount(label_array)
 		block_class = np.argmax(counts)
 		if block_class == 255:
@@ -269,7 +269,7 @@ class Utils(object):
 		im = Image.fromarray(test_image)
 		im.save('f35_g128_b4_gau6_0001_20_35ne.png')
 
-	def load_data(self, training_osm, test_osm, training_features, test_features):
+	def loadData(self, training_osm, test_osm, training_features, test_features):
 
 		training_data = self.configureData(training_osm, training_features, training = True)
 		test_data = self.configureData(test_osm, test_features)
