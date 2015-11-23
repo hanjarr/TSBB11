@@ -11,7 +11,7 @@ np.set_printoptions(threshold = np.nan)
 def imStats(image_block,levels):
 	pixel_pairs = greycomatrix(image_block, [1], [0, np.pi/4, np.pi/2, 3*np.pi/4 ], levels, normed = False)
 	pixel_pairs = np.array(pixel_pairs,dtype=np.float)
-	measures = ['homogeneity', 'energy', 'correlation', 'ASM']
+	measures = ['contrast','dissimilarity','homogeneity', 'energy','correlation','ASM']
 	
 	numberOPP = [np.sum(pixel_pairs[:,:,:,0]), np.sum(pixel_pairs[:,:,:,1]), np.sum(pixel_pairs[:,:,:,2]), np.sum(pixel_pairs[:,:,:,3])]
 
@@ -44,7 +44,7 @@ global num_imfeatures, levels, N, num_im, gaussNr, num_imfeatures
 
 def featureExt(tType):
 
-	file_name="f"+str(num_im*num_imfeatures)+"_g"+str(levels)+"_b"+str(N)+"_gau"+str(gaussNr)+"_"+tType
+	file_name="f"+str(num_im*num_imfeatures)+"_g"+str(levels)+"_b"+str(N)+"_"+featString+"_"+tType
 
 	#constants
 	num_features=num_im*num_imfeatures
@@ -59,23 +59,23 @@ def featureExt(tType):
 	im_pan=cv2.imread("../images/"+tType+"_pan.png")
 
 	# Filtrating the image
-	inImageR = gaussFilt(im_red,gaussNr)
-	inImageG = gaussFilt(im_green,gaussNr)
-	inImageB = gaussFilt(im_blue,gaussNr)
-	inImageN = gaussFilt(im_nir,gaussNr)
-	inImageP = gaussFilt(im_pan,gaussNr)
+	inImageR = im_red#gaussFilt(im_red,gaussNr)
+	inImageG = im_green#gaussFilt(im_green,gaussNr)
+	inImageB = im_blue#gaussFilt(im_blue,gaussNr)
+	inImageN = im_nir#gaussFilt(im_nir,gaussNr)
+	inImageP = im_pan#gaussFilt(im_pan,gaussNr)
 
-	imGaussRed = Image.fromarray(inImageR)
-	imGaussRed.save('gaussRed16Test.png')
+	#imGaussRed = Image.fromarray(inImageR)
+	#imGaussRed.save('gaussRed16Test.png')
 
-	imGaussGreen = Image.fromarray(inImageG)
-	imGaussGreen.save('gaussGreen16Test.png')
+	#imGaussGreen = Image.fromarray(inImageG)
+	#imGaussGreen.save('gaussGreen16Test.png')
 
-	imGaussBlue = Image.fromarray(inImageB)
-	imGaussBlue.save('gaussBlue16Test.png')
+	#imGaussBlue = Image.fromarray(inImageB)
+	#imGaussBlue.save('gaussBlue16Test.png')
 
-	imGaussNir = Image.fromarray(inImageN)
-	imGaussNir.save('gaussNir16Test.png')
+	#imGaussNir = Image.fromarray(inImageN)
+	#imGaussNir.save('gaussNir16Test.png')
 
 	
 	totalImageR = np.divide(inImageR[:,:,0]+inImageR[:,:,1]+inImageR[:,:,2],3.0)
@@ -142,9 +142,11 @@ def featureExt(tType):
 #ANDRA ENDAST DESSA VARDEN, STRANGAR OCH SOKVAGAR FIXAR SIG SJALVA
 levels = 128 		#greyscale levels
 N = 4 				#blockssize
-num_im=6			#nbr Images
+num_im=5			#nbr Images
 gaussNr=4			#gauss Sigma
-num_imfeatures=12	#total nbr of features per image
+num_imfeatures=7	#total nbr of features per image
+global featString
+featString="meanContrastDissimilarityHomogeneityEnergyCorrelationASM"
 
 featureExt("train")
 featureExt("test")
