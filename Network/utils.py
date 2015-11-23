@@ -50,7 +50,7 @@ class Utils(object):
 		if training:
 			keys = [self.training_label(osm_arrays[:,x]) for x in xrange(0,num_blocks)]
 			training_data = zip(inputs,keys)
-			input_data = self.duplicateTrainingData(training_data)
+			input_data = self.reduceTrainingData(training_data)
 		else:
 			keys = [self.test_label(osm_arrays[:,x]) for x in xrange(0,num_blocks)]
 			input_data = zip(inputs,keys)
@@ -93,18 +93,16 @@ class Utils(object):
 		i=0
 		k=0
 		index=0
-		new_index = 0
-		reduced_data = [training_data[x] for x in xrange(0,int(3*min_key))]
+		reduced_data = []
 		while (k<3):
 			if(keys[index][k] == 1):
-				reduced_data[new_index] = training_data[index]
-				new_index = new_index+1
+				reduced_data.append(training_data[index])
 				i = i+1
-				if i == min_key:
+				if i == min_key-1:
 					i=0
 					k = k+1
 					index=0
-			index=index+1
+			index +=1
 		return reduced_data
 
 		'''SORT OUT SAME AMOUNT OF EACH LABEL'''
