@@ -50,7 +50,7 @@ class Utils(object):
 		if training:
 			keys = [self.training_label(osm_arrays[:,x]) for x in xrange(0,num_blocks)]
 			training_data = zip(inputs,keys)
-			input_data = self.reduceTrainingData(training_data)
+			input_data = self.duplicateTrainingData(training_data)
 		else:
 			keys = [self.test_label(osm_arrays[:,x]) for x in xrange(0,num_blocks)]
 			input_data = zip(inputs,keys)
@@ -120,6 +120,7 @@ class Utils(object):
 		for i in range(0,len(num_keys)):
 			separated_data = range(num_keys[i])
 			duplication = int(math.ceil(max_key/num_keys[i]))
+
 			index = 0
 
 			for k in range(0,sum(num_keys)):
@@ -128,10 +129,12 @@ class Utils(object):
 					index += 1
 			separated_data = separated_data*duplication
 			duplicated_data += separated_data
+
+
 		random.shuffle(duplicated_data)
 		return duplicated_data
 		
-	def postProcessG(self, inImage):
+	def postProcessG(self,inImage):
 		stl = np.shape(inImage)
 		image = np.zeros(stl)
 		image[:,:,0] = sf.gaussian_filter(inImage[:,:,0], 10)
@@ -151,7 +154,59 @@ class Utils(object):
 		
 		image = Image.fromarray(image.astype(np.uint8))
 		image.save('processedG.png')
+
+	def erodeDilate(self,im):
 		
+		im_size=np.shape(im)[0]
+
+		image=np.zeros((im_size,im_size,3))
+
+		kernel0 = np.ones((2,2),np.uint8)
+		kernel1 = np.ones((5,5),np.uint8)
+		kernel2 = np.ones((2,2),np.uint8)
+
+		im0=im[:,:,0]
+		im1=im[:,:,1]
+		im2=im[:,:,2]
+
+		im_op0= cv2.morphologyEx(im0,cv2.MORPH_OPEN,kernel0)
+		im_op1 = cv2.morphologyEx(im1,cv2.MORPH_OPEN,kernel1)
+		im_op2 = cv2.morphologyEx(im2,cv2.MORPH_OPEN,kernel2)
+		
+		image[:,:,0]=im_op0
+		image[:,:,1]=im_op1
+		image[:,:,2]=im_op2
+		
+		post=image
+		for i in range(0,im_size):
+			for j in range (0, im_size):
+				if all(k==0 for k in image[i,j]):
+					temp=np.zeros(3)
+					si=i-1
+					fi=i+1
+					sj=j-1
+					fj=j+1
+					if i==0:
+						si+=1
+					if i==im_size-1:
+						fi-=1
+					if j==0:
+						sj+=1
+					if j==im_size-1:
+						fj-=1
+					for u in range(si,fi):
+						for v in range(sj, fj):
+							temp=temp+image[u,v]
+					max_val=max(temp)
+					temp_bool=(temp==max_val)
+					new_color=(255*temp_bool*temp)/max_val
+					post[i,j]=new_color
+		image = Image.fromarray(post.astype(np.uint8))
+		image.save('erode_dilate.png')
+
+#		cv2.imwrite("erode_dilate.png",post)
+
+
 	def createImage(self, network, test_data):
 
 		test_results = [(np.argmax(network.feedforward(x)), y)	for (x, y) in test_data]
@@ -170,7 +225,7 @@ class Utils(object):
 					
 		test_image = np.multiply(np.array(resultImage[:,:,:]),255).astype(np.uint8)
 		self.postProcessG(test_image)
-		
+		self.erodeDilate(test_image)
 		block_dim = self.block_dim
 		
 		# Scale up output image by block_dim
