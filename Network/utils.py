@@ -4,6 +4,7 @@ import os
 import glob
 import math
 import random
+import scipy.ndimage.filters as sf
 from PIL import Image
 
 np.set_printoptions(threshold=np.nan)
@@ -129,7 +130,28 @@ class Utils(object):
 			duplicated_data += separated_data
 		random.shuffle(duplicated_data)
 		return duplicated_data
+		
+	def postProcessG(self, inImage):
+		stl = np.shape(inImage)
+		image = np.zeros(stl)
+		image[:,:,0] = sf.gaussian_filter(inImage[:,:,0], 10)
+		image[:,:,1] = sf.gaussian_filter(inImage[:,:,1], 5)
+		image[:,:,2] = sf.gaussian_filter(inImage[:,:,2], 1.5)
 
+		imSize = np.shape(image)
+
+		for i in range(0,imSize[0]):
+			for k in range(0,imSize[1]):
+				maxValue = np.amax(image[i,k,:])
+				for l in range(0,3):
+					if(image[i,k,l] == maxValue):
+						image[i,k,l] = 255
+					else:
+						image[i,k,l] = 0			
+		
+		image = Image.fromarray(image.astype(np.uint8))
+		image.save('processedG.png')
+		
 	def createImage(self, network, test_data):
 
 		test_results = [(np.argmax(network.feedforward(x)), y)	for (x, y) in test_data]
@@ -145,21 +167,51 @@ class Utils(object):
 			if(u==imDim):
 				u=0
 				v=v+1
+					
 		test_image = np.multiply(np.array(resultImage[:,:,:]),255).astype(np.uint8)
+		self.postProcessG(test_image)
+		
+		block_dim = self.block_dim
 		
 		# Scale up output image by block_dim
-		block_dim = self.block_dim
-		image_resize = cv2.resize(test_image, (0,0), fx=block_dim, fy=block_dim) 
-		result_image = Image.fromarray(image_resize)
-		result_image.save('result.png')
-		
+		image_resized = cv2.resize(test_image, (0,0), fx=block_dim, fy=block_dim,interpolation=0)
+		cv2.imwrite("out_RGB.png",image_resized)
+
+		# Set all red pixels to white
+		threshold = 100
+		image_nored = image_resized
+		image_nored[image_resized[:,:,2] > threshold,0] = 255
+		image_nored[image_resized[:,:,2] > threshold,1] = 255
+		image_nored[image_resized[:,:,2] > threshold,2] = 255
+		cv2.imwrite("out_nored.png",image_nored)
+
 		# Blend result image with source image
-		weight = 0.7 # Weight of source image in blended image, [0.0 - 1.0]
-		
-		vricon_image = cv2.imread("../images/test_blue.png")
-		blend_array = cv2.addWeighted(image_resize,1-weight,vricon_image,weight,0)
-		blend_image = Image.fromarray(blend_array)
-		blend_image.save("blended.png")
+		weight = 0.9 # Weight of source image in blended image, [0.0 - 1.0]
+		image_source = cv2.imread("../images/test_blue.png")
+		image_blended = cv2.addWeighted(image_resized,1-weight,image_source,weight,0)
+		cv2.imwrite("out_blended.png",image_blended)
+
+		# Create error image
+		image_osm = cv2.imread("../images/test_osm.png")
+
+		image_correct_red = np.logical_and(image_osm[:,:,0] == 255,image_resized[:,:,2] == 255)
+		image_correct_green = np.logical_and(image_osm[:,:,0] == 119,image_resized[:,:,1] == 255)
+		image_correct_blue = np.logical_and(image_osm[:,:,0] == 0,image_resized[:,:,0] == 255)
+		image_error = image_resized
+
+		image_error[image_correct_red == True,0] = 255
+		image_error[image_correct_red == True,1] = 255
+		image_error[image_correct_red == True,2] = 255
+
+		image_error[image_correct_green == True,0] = 255
+		image_error[image_correct_green == True,1] = 255
+		image_error[image_correct_green == True,2] = 255
+
+		image_error[image_correct_blue == True,0] = 255
+		image_error[image_correct_blue == True,1] = 255
+		image_error[image_correct_blue == True,2] = 255
+
+		cv2.imwrite("out_error.png",image_error)
 		
 		im = Image.fromarray(test_image)
 		im.save('f35_g128_b4_gau6_0001_20_35ne.png')

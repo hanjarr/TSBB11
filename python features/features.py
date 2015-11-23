@@ -11,8 +11,9 @@ np.set_printoptions(threshold = np.nan)
 def imStats(image_block,levels):
 	pixel_pairs = greycomatrix(image_block, [1], [0, np.pi/4, np.pi/2, 3*np.pi/4 ], levels, normed = False)
 	pixel_pairs = np.array(pixel_pairs,dtype=np.float)
+
 	measures = ['contrast','dissimilarity','homogeneity', 'energy','correlation','ASM']
-	
+
 	numberOPP = [np.sum(pixel_pairs[:,:,:,0]), np.sum(pixel_pairs[:,:,:,1]), np.sum(pixel_pairs[:,:,:,2]), np.sum(pixel_pairs[:,:,:,3])]
 
 	weightingOPP = np.zeros((levels,levels,1 ,1))
@@ -148,5 +149,6 @@ num_imfeatures=7	#total nbr of features per image
 global featString
 featString="meanContrastDissimilarityHomogeneityEnergyCorrelationASM"
 
-featureExt("train")
-featureExt("test")
+
+featureExt("train2")
+#featureExt("test")
