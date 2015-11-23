@@ -152,6 +152,7 @@ class Utils(object):
 		
 		image = Image.fromarray(image.astype(np.uint8))
 		image.save('processedG.png')
+		return image
 
 	def erodeDilate(self,im):
 		
@@ -222,12 +223,15 @@ class Utils(object):
 				v=v+1
 					
 		test_image = np.multiply(np.array(resultImage[:,:,:]),255).astype(np.uint8)
-		self.postProcessG(test_image)
+		test_image_processed = self.postProcessG(test_image)
 		self.erodeDilate(test_image)
 		block_dim = self.block_dim
 		
+		# Convert from BGR to RGB
+		test_image_processed = test_image_processed[:,:,::-1].copy()
+		
 		# Scale up output image by block_dim
-		image_resized = cv2.resize(test_image, (0,0), fx=block_dim, fy=block_dim,interpolation=0)
+		image_resized = cv2.resize(test_image_processed, (0,0), fx=block_dim, fy=block_dim,interpolation=0)
 		cv2.imwrite("out_RGB.png",image_resized)
 
 		# Set all red pixels to white
@@ -266,7 +270,7 @@ class Utils(object):
 
 		cv2.imwrite("out_error.png",image_error)
 		
-		im = Image.fromarray(test_image)
+		im = Image.fromarray(test_image_processed)
 		im.save('f35_g128_b4_gau6_0001_20_35ne.png')
 
 	def loadData(self, training_osm, test_osm, training_features, test_features):
