@@ -4,7 +4,7 @@ import os
 import glob
 import math
 import random
-import scipy.ndimage.filters as sf
+#import scipy.ndimage.filters as sf
 from PIL import Image
 
 np.set_printoptions(threshold=np.nan)
@@ -280,3 +280,67 @@ class Utils(object):
 		test_data = self.configureData(test_osm, test_features)
 
 		return (training_data,test_data)
+	
+	def evaluateResult(self, test_image, result_image):
+		if(test_image.shape != result_image.shape):
+			print "Error, not equal image sizes"
+			return None
+		else:
+			accuracy = []
+			result = []
+			
+			# Check colorband , (Red, other)
+			print "Checking others"
+			correct_pixels = 0
+			result_pixels = 0
+			for x in range(0,test_image.shape[0]):
+				for y in range (0,test_image.shape[1]):
+					#print test_image[x,y,0],
+					#print result_image[x,y,0],
+					if(np.logical_and(result_image[x,y,2] == 255,test_image[x,y,0] == 255)):
+						correct_pixels = correct_pixels+1
+					if(test_image[x,y,0] == 255):
+						result_pixels = result_pixels+1
+			accuracy.append(correct_pixels)
+			result.append(result_pixels)
+			
+			# Check colorband 2, (Green, water)
+			print "Checking water"
+			correct_pixels = 0
+			result_pixels = 0
+			for x in range(0,test_image.shape[0]):
+				for y in range (0,test_image.shape[1]):
+					#print test_image[x,y,1],
+					#print result_image[x,y,1],
+					if(np.logical_and(result_image[x,y,1] == 255,test_image[x,y,0] == 119)):
+						correct_pixels = correct_pixels+1
+					if(test_image[x,y,0] == 119):
+						result_pixels = result_pixels+1
+			accuracy.append(correct_pixels)
+			result.append(result_pixels)
+			
+			# Check colorband 3 (Blue, roads)
+			print "Checking roads"
+			correct_pixels = 0
+			result_pixels = 0
+			for x in range(0,test_image.shape[0]):
+				for y in range (0,test_image.shape[1]):
+					#print test_image[x,y,2],
+					#print result_image[x,y,2],
+					if(np.logical_and(result_image[x,y,0] == 255,test_image[x,y,0] == 0)):
+						correct_pixels = correct_pixels+1
+					if(test_image[x,y,0] == 0):
+						result_pixels = result_pixels+1
+			accuracy.append(correct_pixels)
+			result.append(result_pixels)
+			
+			percent = np.true_divide(accuracy,result)
+			
+			print "Accuracy (Other, Water, Roads): ", 
+			print percent
+			
+			return percent
+
+
+			
+			
