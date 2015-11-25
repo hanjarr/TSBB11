@@ -30,7 +30,7 @@ def main():
 	hidden_layer_2 = 20
 	output_layer = 3
 
-	epochs = 30
+	epochs = 50
 	mini_batch = 10
 	learning_rate = 0.01
 	save_net = False
@@ -91,6 +91,6 @@ def main():
 		#plt.legend([line1,line2],["Training", "Evaluation"])
 		#plt.savefig("../saved_cost/cost_e"+str(epochs)+"_mb"+str(mini_batch)+"_lr"+str(learning_rate)+".png")
 
-	#utils.createImage(net, test_data)
+	utils.createImage(net, test_data)
 	
 main()
