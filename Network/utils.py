@@ -202,9 +202,7 @@ class Utils(object):
 					post[i,j]=new_color
 		image = Image.fromarray(post.astype(np.uint8))
 		image.save('erode_dilate.png')
-
-#		cv2.imwrite("erode_dilate.png",post)
-
+		return image
 
 	def createImage(self, network, test_data):
 
@@ -221,17 +219,22 @@ class Utils(object):
 			if(u==imDim):
 				u=0
 				v=v+1
-					
-		test_image = np.multiply(np.array(resultImage[:,:,:]),255).astype(np.uint8)
-		test_image_processed = self.postProcessG(test_image)
-		self.erodeDilate(test_image)
+		
 		block_dim = self.block_dim
+		test_image = np.multiply(np.array(resultImage[:,:,:]),255).astype(np.uint8)
+		
+		# PostProcess images with two different methods (use only one)
+		#test_image_processed = self.postProcessG(test_image)
+		test_image_processed = self.erodeDilate(test_image)
+		
+		# Convert from Image object to Numpy array
+		test_image_array = np.array(test_image_processed.getdata(),np.uint8).reshape(test_image_processed.size[1], test_image_processed.size[0], 3)
 		
 		# Convert from BGR to RGB
-		test_image_processed = test_image_processed[:,:,::-1].copy()
+		test_image_array = test_image_array[:,:,::-1].copy()
 		
 		# Scale up output image by block_dim
-		image_resized = cv2.resize(test_image_processed, (0,0), fx=block_dim, fy=block_dim,interpolation=0)
+		image_resized = cv2.resize(test_image_array, (0,0), fx=block_dim, fy=block_dim,interpolation=0)
 		cv2.imwrite("out_RGB.png",image_resized)
 
 		# Set all red pixels to white
@@ -269,9 +272,7 @@ class Utils(object):
 		image_error[image_correct_blue == True,2] = 255
 
 		cv2.imwrite("out_error.png",image_error)
-		
-		im = Image.fromarray(test_image_processed)
-		im.save('f35_g128_b4_gau6_0001_20_35ne.png')
+		test_image_processed.save('f35_g128_b4_gau6_0001_20_35ne.png')
 
 	def loadData(self, training_osm, test_osm, training_features, test_features):
 

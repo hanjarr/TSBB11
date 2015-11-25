@@ -12,11 +12,11 @@ import cv2
 
 # Input files
 input_geotiff_files = []
-input_geotiff_files.append("../../../Vricon_Sydney/ortho_blue/0_1_0_tex.tif")
-input_geotiff_files.append("../../../Vricon_Sydney/ortho_green/0_1_0_tex.tif")
-input_geotiff_files.append("../../../Vricon_Sydney/ortho_nir/0_1_0_tex.tif")
-input_geotiff_files.append("../../../Vricon_Sydney/ortho_pan/0_1_0_tex.tif")
-input_geotiff_files.append("../../../Vricon_Sydney/ortho_red/0_1_0_tex.tif")
+input_geotiff_files.append("../../../Vricon_Sydney/ortho_blue/0_1_1_tex.tif")
+input_geotiff_files.append("../../../Vricon_Sydney/ortho_green/0_1_1_tex.tif")
+input_geotiff_files.append("../../../Vricon_Sydney/ortho_nir/0_1_1_tex.tif")
+input_geotiff_files.append("../../../Vricon_Sydney/ortho_pan/0_1_1_tex.tif")
+input_geotiff_files.append("../../../Vricon_Sydney/ortho_red/0_1_1_tex.tif")
 
 # Output files
 output_geotiff_cutout_files = []
@@ -29,11 +29,18 @@ output_geotiff_cutout_files.append("vricon_ortho_red_cutout.png")
 output_rasterized_file = "rasterized.png"
 output_rasterized_cutout_file = "rasterized_cutout.png"
 
+output_blended_file = "blended.png"
+output_blended_cutout_file = "blended_cutout.png"
+
+# Test 1000x1000, from 2000,1000
+# Train 2000x2000, from 1500,5500
+# Train 1200x1200, from 3300,700
+
 # Output coutout size
-cutout_xmin = 1000 # Top bound, px
-cutout_ymin = 1000 # Left bound, px
-cutout_xsize = 2000 # Horizontal bound size, px
-cutout_ysize = 2000 # Vertical bound size, px
+cutout_xmin = 3300 # Left bound, px
+cutout_ymin = 700 # Top bound, px
+cutout_xsize = 1200 # Vertical bound size, px
+cutout_ysize = 1200 # Horizontal bound size, px
 
 # Output file resolution
 pixel_size = 0.5 #(Should be 0.5 to correspond with Vricon images)
@@ -54,8 +61,10 @@ transformed_file = []
 osm_file = "osm_cutout.osm"
 shape_file.append("shape_input_1.shp")
 shape_file.append("shape_input_2.shp")
+shape_file.append("shape_input_3.shp")
 transformed_file.append("shape_transformed_1.shp")
 transformed_file.append("shape_transformed_2.shp")
+transformed_file.append("shape_transformed_3.shp")
 
 # ---------------------------------------------------------------
 # Import GeoTiff and extract GeoInfo
@@ -131,7 +140,9 @@ extract_sql_queries = []
 if draw_roads == 1:
 	print "   Roads"
 	extract_sql_queries.append("select highway from lines where highway!='footway' and highway!='cycleway' and highway!='steps' and highway!='path' and highway!='pedestrian'")
-	#extract_sql_queries.append("select * from lines where highway='primary' or highway='residential' or highway='secondary'")
+	extract_sql_queries.append("select * from lines where highway='primary'")
+	#extract_sql_queries.append("select * from lines where highway='residential'")
+	#extract_sql_queries.append("select * from lines where highway='secondary'")
 
 if draw_water == 1:
 	print "   Water"
@@ -196,7 +207,7 @@ target_ds.GetRasterBand(1).WriteArray( raster )
 # ---------------------------------------------------------------
 # Draw surface objects to image file with GDAL RasterizeLayer
 # ---------------------------------------------------------------
-gdal.RasterizeLayer(target_ds, [1], transformed_layer[1], burn_values = [120], options = ["ALL_TOUCHED=FALSE", "MERGE_ALG=ADD"]) # For color: Change to 3 bands and 3 values
+gdal.RasterizeLayer(target_ds, [1], transformed_layer[2], burn_values = [120], options = ["ALL_TOUCHED=FALSE", "MERGE_ALG=ADD"]) # For color: Change to 3 bands and 3 values
 # Write to file
 gdal.GetDriverByName('PNG').CreateCopy(output_rasterized_file,target_ds)
 target_ds = None
@@ -236,13 +247,29 @@ def draw_solid_line(geometries, width, color ):
 road_shape_data = ogr.Open(transformed_file[0])
 if road_shape_data is not None:
 	road_geom = build_point_list(road_shape_data)
-	draw_solid_line(road_geom, 10, (0)) # For color: Change to 3 values
+	draw_solid_line(road_geom, 15, (0)) # For color: Change to 3 values
+
+road_shape_data = ogr.Open(transformed_file[1])
+if road_shape_data is not None:
+	road_geom = build_point_list(road_shape_data)
+	draw_solid_line(road_geom, 22, (0)) # For color: Change to 3 values
 
 # Draw Image
 cv2.imwrite(output_rasterized_file, img)
 road_shape_data = None
 water_shape_data = None
 
+# ---------------------------------------------------------------
+# Blend GeoTiff and rasterized image
+# ---------------------------------------------------------------
+print "---------- Blend GeoTiff and rasterized image ----------"
+weight = 0.7 # Weight for GeoTiff image, [0.0 - 1.0]
+vricon_image = cv2.imread(input_geotiff_files[i])
+if vricon_image.shape == img.shape:
+	blend_img = cv2.addWeighted(img,1-weight,vricon_image,weight,0)
+	cv2.imwrite(output_blended_file,blend_img)
+else:
+	print "GeoTiff and rasterized not same size. Skip blending."
 # ---------------------------------------------------------------
 # Crop both goal and rasterized file
 # ---------------------------------------------------------------
@@ -253,12 +280,16 @@ if (cutout_xmin + cutout_xsize > x_res) or (cutout_ymin + cutout_ysize > y_res):
 	sys.exit()
 
 print "Cutout size: " + str(cutout_xsize) + " x " + str(cutout_ysize) + " px"
-print 'Cut image 1 of 6'
+print 'Cut image 1 of 7'
 cropstring = "gdal_translate -q -srcwin " + str(cutout_xmin) + " " + str(cutout_ymin) + " " + str(cutout_xsize) + " " + str(cutout_ysize) + " " + output_rasterized_file + " " + output_rasterized_cutout_file
 os.system(cropstring)
 
+print 'Cut image 2 of 7'
+cropstring = "gdal_translate -q -srcwin " + str(cutout_xmin) + " " + str(cutout_ymin) + " " + str(cutout_xsize) + " " + str(cutout_ysize) + " " + output_blended_file + " " + output_blended_cutout_file
+os.system(cropstring)
+
 for i in range(0,len(output_geotiff_cutout_files)):
-	print 'Cut image ' + str(i+2) + ' of ' + str(len(output_geotiff_cutout_files) + 1)
+	print 'Cut image ' + str(i+2) + ' of ' + str(len(output_geotiff_cutout_files) + 2)
 	cropstring = "gdal_translate -q -srcwin " + str(cutout_xmin) + " " + str(cutout_ymin) + " " + str(cutout_xsize) + " " + str(cutout_ysize) + " " + input_geotiff_files[i] + " " + output_geotiff_cutout_files[i]
 	os.system(cropstring)
 
