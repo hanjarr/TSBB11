@@ -5,6 +5,7 @@ from osgeo.gdalconst import *
 import numpy as np
 import sys
 import cv2
+import skimage.io
 
 # ---------------------------------------------------------------
 # Settings
@@ -17,29 +18,37 @@ input_geotiff_files.append("../../CDIO/sydney/ortho_green/0_1_0_tex.tif")
 input_geotiff_files.append("../../CDIO/sydney/ortho_nir/0_1_0_tex.tif")
 input_geotiff_files.append("../../CDIO/sydney/ortho_pan/0_1_0_tex.tif")
 input_geotiff_files.append("../../CDIO/sydney/ortho_red/0_1_0_tex.tif")
-
+input_osm_file = "../../CDIO/sydney/ortho_blue/0_1_0_dsm.tif"
 # Output files
 output_geotiff_cutout_files = []
-output_geotiff_cutout_files.append("vricon_ortho_blue_cutout")
-output_geotiff_cutout_files.append("vricon_ortho_green_cutout")
-output_geotiff_cutout_files.append("vricon_ortho_nir_cutout")
-output_geotiff_cutout_files.append("vricon_ortho_pan_cutout")
-output_geotiff_cutout_files.append("vricon_ortho_red_cutout")
+output_geotiff_cutout_files.append("vricon_ortho_blue")
+output_geotiff_cutout_files.append("vricon_ortho_green")
+output_geotiff_cutout_files.append("vricon_ortho_nir")
+output_geotiff_cutout_files.append("vricon_ortho_pan")
+output_geotiff_cutout_files.append("vricon_ortho_red")
+output_osm_file = "vricon_dsm"
 
 output_rasterized_file = "rasterized.png"
-output_rasterized_cutout_file = "rasterized_cutout"
+output_rasterized_cutout_file = "rasterized"
+
+output_blended_file = "blended_whole.png"
+output_blended_cutout_file = "blended"
+
+# Test 1000x1000, from 2000,1000
+# Train 2000x2000, from 1500,5500
+# Train 1200x1200, from 3300,700
 
 # Output coutout size
-cutout_xmin = 1000 # Top bound, px
-cutout_ymin = 1000 # Left bound, px
-cutout_xsize = 1000 # Horizontal bound size, px
-cutout_ysize = 1000 # Vertical bound size, px
+cutout_xmin = 3300 # Left bound, px
+cutout_ymin = 700 # Top bound, px
+cutout_xsize = 1000 # Vertical bound size, px
+cutout_ysize = 1000 # Horizontal bound size, px
 
 # Output file resolution
 pixel_size = 0.5 #(Should be 0.5 to correspond with Vricon images)
 
 # Download new OSM data with overpass API or use old file (1 for yes, 0 for no)
-download_new_osm_data = 0
+download_new_osm_data = 1
 
 # Set which layers to draw in rasterized file (1 for yes, 0 for no)
 draw_roads = 1
@@ -54,8 +63,10 @@ transformed_file = []
 osm_file = "osm_cutout.osm"
 shape_file.append("shape_input_1.shp")
 shape_file.append("shape_input_2.shp")
+shape_file.append("shape_input_3.shp")
 transformed_file.append("shape_transformed_1.shp")
 transformed_file.append("shape_transformed_2.shp")
+transformed_file.append("shape_transformed_3.shp")
 
 # ---------------------------------------------------------------
 # Import GeoTiff and extract GeoInfo
@@ -131,7 +142,9 @@ extract_sql_queries = []
 if draw_roads == 1:
 	print "   Roads"
 	extract_sql_queries.append("select highway from lines where highway!='footway' and highway!='cycleway' and highway!='steps' and highway!='path' and highway!='pedestrian'")
-	#extract_sql_queries.append("select * from lines where highway='primary' or highway='residential' or highway='secondary'")
+	extract_sql_queries.append("select * from lines where highway='primary'")
+	#extract_sql_queries.append("select * from lines where highway='residential'")
+	#extract_sql_queries.append("select * from lines where highway='secondary'")
 
 if draw_water == 1:
 	print "   Water"
@@ -196,7 +209,7 @@ target_ds.GetRasterBand(1).WriteArray( raster )
 # ---------------------------------------------------------------
 # Draw surface objects to image file with GDAL RasterizeLayer
 # ---------------------------------------------------------------
-gdal.RasterizeLayer(target_ds, [1], transformed_layer[1], burn_values = [120], options = ["ALL_TOUCHED=FALSE", "MERGE_ALG=ADD"]) # For color: Change to 3 bands and 3 values
+gdal.RasterizeLayer(target_ds, [1], transformed_layer[2], burn_values = [120], options = ["ALL_TOUCHED=FALSE", "MERGE_ALG=ADD"]) # For color: Change to 3 bands and 3 values
 # Write to file
 gdal.GetDriverByName('PNG').CreateCopy(output_rasterized_file,target_ds)
 target_ds = None
@@ -236,13 +249,29 @@ def draw_solid_line(geometries, width, color ):
 road_shape_data = ogr.Open(transformed_file[0])
 if road_shape_data is not None:
 	road_geom = build_point_list(road_shape_data)
-	draw_solid_line(road_geom, 10, (0)) # For color: Change to 3 values
+	draw_solid_line(road_geom, 15, (0)) # For color: Change to 3 values
+
+road_shape_data = ogr.Open(transformed_file[1])
+if road_shape_data is not None:
+	road_geom = build_point_list(road_shape_data)
+	draw_solid_line(road_geom, 22, (0)) # For color: Change to 3 values
 
 # Draw Image
 cv2.imwrite(output_rasterized_file, img)
 road_shape_data = None
 water_shape_data = None
 
+# ---------------------------------------------------------------
+# Blend GeoTiff and rasterized image
+# ---------------------------------------------------------------
+print "---------- Blend GeoTiff and rasterized image ----------"
+weight = 0.7 # Weight for GeoTiff image, [0.0 - 1.0]
+vricon_image = cv2.imread(input_geotiff_files[i])
+if vricon_image.shape == img.shape:
+	blend_img = cv2.addWeighted(img,1-weight,vricon_image,weight,0)
+	cv2.imwrite(output_blended_file,blend_img)
+else:
+	print "GeoTiff and rasterized not same size. Skip blending."
 # ---------------------------------------------------------------
 # Crop both goal and rasterized file
 # ---------------------------------------------------------------
@@ -252,23 +281,36 @@ if (cutout_xmin + cutout_xsize > x_res) or (cutout_ymin + cutout_ysize > y_res):
 	print '---------- Exit ----------'
 	sys.exit()
 
+osm = skimage.io.imread(input_osm_file, plugin='tifffile')
+x_range = int(np.floor(x_res/cutout_xsize)*cutout_xsize)
+y_range = int(np.floor(y_res/cutout_ysize)*cutout_ysize)
 counter = 1
-for k in range(0,8000, int(cutout_xsize)):
+for k in range(0,x_range, int(cutout_xsize)):
 	cutout_xmin = k
-	for j in range(0,8000, int(cutout_ysize)):
+	for j in range(0,y_range, int(cutout_ysize)):
 		cutout_ymin = j
 		c = str(counter)
 		print "Cutout size: " + str(cutout_xsize) + " x " + str(cutout_ysize) + " px"
-		print 'Cut image 1 of 6'
+		print 'Cut image 1 of 7'
 		cropstring = "gdal_translate -q -srcwin " + str(cutout_xmin) + " " + str(cutout_ymin) + " " + str(cutout_xsize) + " " + str(cutout_ysize) + " " + output_rasterized_file + " " + output_rasterized_cutout_file + c + ".png"
 		os.system(cropstring)
 
+		print 'Cut image 2 of 7'
+		cropstring = "gdal_translate -q -srcwin " + str(cutout_xmin) + " " + str(cutout_ymin) + " " + str(cutout_xsize) + " " + str(cutout_ysize) + " " + output_blended_file + " " + output_blended_cutout_file + c + ".png"
+		os.system(cropstring)
+
 		for i in range(0,len(output_geotiff_cutout_files)):
-			print 'Cut image ' + str(i+2) + ' of ' + str(len(output_geotiff_cutout_files) + 1)
+			print 'Cut image ' + str(i+2) + ' of ' + str(len(output_geotiff_cutout_files) + 2)
 			cropstring = "gdal_translate -q -srcwin " + str(cutout_xmin) + " " + str(cutout_ymin) + " " + str(cutout_xsize) + " " + str(cutout_ysize) + " " + input_geotiff_files[i] + " " + output_geotiff_cutout_files[i] + c + ".png"
 			os.system(cropstring)
+
+		''' save height map '''
+		cutout = osm[k:k+cutout_xsize,j:j+cutout_ysize]
+		cutout = cv2.convertScaleAbs(cutout)
+		cv2.imwrite(str(output_osm_file + str(counter) + '.tif'), cutout)
 		counter = counter +1
 		print counter
+
 # ---------------------------------------------------------------
 # Close datasets and clean temp files
 # ---------------------------------------------------------------
