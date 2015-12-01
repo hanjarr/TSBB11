@@ -142,5 +142,6 @@ def featureExt(filename):
 levels = 128 		#greyscale levels
 N = 4 				#blockssize
 
+filename="3"
 
 featureExt(filename)
