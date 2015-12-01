@@ -58,7 +58,7 @@ def block_mean(im_array):
 	mean_array/=np.amax(mean_array[:])
 	return mean_array
 
-def featureExt(tType):
+def featureExt(filename):
 
 	num_features=0
 	div=256/levels
@@ -73,19 +73,13 @@ def featureExt(tType):
 
 	num_blocks=np.shape(im_blue)[0]**2/(N**2)
 
-	# Filtrating the image
-	inImageB = gaussFilt(im_blue,gaussNr)
-	inImageR = gaussFilt(im_red,gaussNr)
-	inImageG = gaussFilt(im_green,gaussNr)
-	inImageN = gaussFilt(im_nir,gaussNr)
-	inImageP = gaussFilt(im_pan,gaussNr)
 
 	#mean and graylevels
-	imageB = np.floor((inImageB[:,:,0]+inImageB[:,:,1]+inImageB[:,:,2])/(3.0*div))
-	imageR = np.floor((inImageR[:,:,0]+inImageR[:,:,1]+inImageR[:,:,2])/(3.0*div))
-	imageG = np.floor((inImageG[:,:,0]+inImageG[:,:,1]+inImageG[:,:,2])/(3.0*div))
-	imageN = np.floor((inImageN[:,:,0]+inImageN[:,:,1]+inImageN[:,:,2])/(3.0*div))
-	imageP = np.floor((inImageP[:,:,0]+inImageP[:,:,1]+inImageP[:,:,2])/(3.0*div))
+	imageB = np.floor((im_blue[:,:,0]+im_blue[:,:,1]+im_blue[:,:,2])/(3.0*div))
+	imageR = np.floor((im_red[:,:,0]+im_red[:,:,1]+im_red[:,:,2])/(3.0*div))
+	imageG = np.floor((im_green[:,:,0]+im_green[:,:,1]+im_green[:,:,2])/(3.0*div))
+	imageN = np.floor((im_nir[:,:,0]+im_nir[:,:,1]+im_nir[:,:,2])/(3.0*div))
+	imageP = np.floor((im_pan[:,:,0]+im_pan[:,:,1]+im_pan[:,:,2])/(3.0*div))
 
 	#split images into arrays
 	splitB=utils.splitImage(imageB,N,num_blocks)
@@ -121,7 +115,7 @@ def featureExt(tType):
 
 	#Save data to file
 	num_features=np.shape(arrayImage)[0]
-	file_name="f"+str(num_features)+"_g"+str(levels)+"_b"+str(N)+"_gau"+str(gaussNr)+"_"+tType
+	file_name="f"+str(num_features)+"_g"+str(levels)+"_b"+str(N)+"_gau"+"_"+filename
 
 	np.save(file_name, arrayImage)
 
@@ -132,9 +126,8 @@ def featureExt(tType):
 #ANDRA ENDAST DESSA VARDEN, STRANGAR OCH SOKVAGAR FIXAR SIG SJALVA
 levels = 128 		#greyscale levels
 N = 4 				#blockssize
-gaussNr = 1			#gauss Sigma
+
+
 filename="3"
 
-
 featureExt(filename)
-#featureExt("train")
