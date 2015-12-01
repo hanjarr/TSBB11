@@ -1,0 +1,1 @@
+{"sizes": [26, 52, 3], "learning rate": 0.008, "achieved after epoch": 14, "epochs": 15, "mini batch size": 10, "best evaluation result": [0.5766568350087281, 0.8141135972461274, 0.754441416893733]}
