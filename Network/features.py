@@ -2,11 +2,12 @@ import cv2
 import numpy as np
 import scipy
 import skimage
-import scipy.ndimage.filters as sf
+#import scipy.ndimage.filters as sf
 from skimage.feature import greycomatrix, greycoprops
 from PIL import Image
 import utils
 import heightFeatures
+import timeit
 global levels, N, gaussNr
 
 np.set_printoptions(threshold = np.nan)
@@ -16,7 +17,9 @@ def imStats(im_array,levels):
 
 	measures = ['homogeneity', 'energy','dissimilarity','ASM']
 	greyco_array=np.zeros((len(measures),array_size))
-
+	
+	step = array_size/100;
+	percent = 1
 	for i in range(0,array_size):
 
 		image_block=im_array[:,:,i]
@@ -33,8 +36,10 @@ def imStats(im_array,levels):
 
 		greyco_array[:,i]=feature_arrays
 		
-		print float(i)/float(array_size)
-
+		if (i == step*percent):
+			print percent
+			percent = percent +1
+				
 	for j in range(0,array_size):
 		greyco_array[:,j]/=np.amax(greyco_array[:,j])
 	
@@ -93,12 +98,24 @@ def featureExt(filename):
 	meanG=block_mean(splitG)
 	meanN=block_mean(splitN)
 	meanP=block_mean(splitP)
-
+	
+	start = timeit.default_timer()
+	print "Start"
 	statsB=imStats(splitB,levels)
+	stop = timeit.default_timer()
+	print "B klar, tid:", stop - start
 	statsR=imStats(splitR,levels)
+	stop = timeit.default_timer()
+	print "R klar, tid:", stop - start
 	statsG=imStats(splitG,levels)
+	stop = timeit.default_timer()
+	print "G klar, tid:", stop - start
 	statsN=imStats(splitN,levels)
+	stop = timeit.default_timer()
+	print "N klar, tid:", stop - start
 	statsP=imStats(splitP,levels)
+	stop = timeit.default_timer()
+	print "Stop, tid:", stop - start
 
 	height=heightFeatures.heightFeatures(im_height,N,"none")
 
@@ -128,6 +145,6 @@ levels = 128 		#greyscale levels
 N = 4 				#blockssize
 
 
-filename="3"
+filename="1"
 
 featureExt(filename)
