@@ -132,7 +132,7 @@ def featureExt(filename):
 
 	#Save data to file
 	num_features=np.shape(arrayImage)[0]
-	file_name="f"+str(num_features)+"_g"+str(levels)+"_b"+str(N)+"_gau"+"_"+filename
+	file_name="f"+str(num_features)+"_g"+str(levels)+"_b"+str(N)+"_"+filename
 
 	np.save("../python features/"+file_name, arrayImage)
 
@@ -142,6 +142,5 @@ def featureExt(filename):
 levels = 128 		#greyscale levels
 N = 4 				#blockssize
 
-filename="1"
 
 featureExt(filename)
