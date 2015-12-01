@@ -20,6 +20,7 @@ import sys
 # Third-party libraries
 import numpy as np
 from operator import truediv
+from sklearn.metrics import confusion_matrix
 
 #### Define the quadratic and cross-entropy cost functions
 
@@ -127,7 +128,7 @@ class Network(object):
 			a = sigmoid(np.dot(w, a)+b)
 		return a
 
-	def SGD(self, training_data, epochs, mini_batch_size, eta,
+	def SGD(self, training_data, epochs, mini_batch_size, eta, save_dir,
 			lmbda = 0.0,
 			evaluation_data=None,
 			monitor_evaluation_cost=False,
@@ -172,7 +173,7 @@ class Network(object):
 				training_cost.append(cost)
 				print "Cost on training data: {}".format(cost)
 			if monitor_training_accuracy:
-				total, accuracy = self.accuracy(training_data, convert=True)
+				total, accuracy, confusion = self.accuracy(training_data, convert=True)
 				training_accuracy.extend(accuracy)
 				print "Accuracy on training data (Others, water, roads): " + "\n" + "{}".format(accuracy)
 				print "Accuracy on training data (total):{} % ".format(total) + "\n"
@@ -181,19 +182,34 @@ class Network(object):
 				evaluation_cost.append(cost)
 				print "Cost on evaluation data: {}".format(cost)
 			if monitor_evaluation_accuracy:
-				total, accuracy = self.accuracy(evaluation_data)
+				total, accuracy, confusion = self.accuracy(evaluation_data)
 				evaluation_accuracy.extend(accuracy)
 				print "Accuracy on test data (Others, water, roads): " + "\n" + "{}".format(accuracy)
 				print "Accuracy on test data (total):{} % ".format(total) + "\n"
-				accuracy_sum = sum(accuracy)
-
+				accuracy_sum = np.trace(confusion)
+				# accuracy_sum = sum(accuracy)
+				
 				''' Save best network'''
-				#if (accuracy_sum > highest_accuracy and accuracy[0] > 0.6 and
-				#	accuracy[1] > 0.6 and accuracy[2] > 0.6:
-				#	self.save("../saved_networks/o"+ str(accuracy[0]) + "_w" + str(accuracy[1]) + "_r" + str(accuracy[2]))
+				if (accuracy_sum > highest_accuracy):# and accuracy[0] > 0.6 and accuracy[1] > 0.6 and accuracy[2] > 0.6):
+					self.save(save_dir+"/network")
+					highest_accuracy = accuracy_sum
+					epoch_num = j
+					test_accuracy = accuracy
+					test_confusion = confusion
+
+					"""Save the neural network info """
+					data = {"sizes": self.sizes,
+					"epochs": epochs,
+					"mini batch size": mini_batch_size,
+					"learning rate": eta,
+					"best evaluation result": test_accuracy,
+					"achieved after epoch": epoch_num}
+					f = open(save_dir + "/info", "w")
+					json.dump(data, f)
+					f.close()
 
 		return evaluation_cost, evaluation_accuracy, \
-			training_cost, training_accuracy
+			training_cost, training_accuracy,test_confusion
 
 	def update_mini_batch(self, mini_batch, eta, lmbda, n):
 		"""Update the network's weights and biases by applying gradient
@@ -293,8 +309,14 @@ class Network(object):
 			correct_list.append(correct)
 		correct_list = map(truediv, correct_list, labels)
 
+		pred = [x[0] for x in results]
+		true = [x[1] for x in results]
 
-		return (total,correct_list)
+		conf_mat = confusion_matrix(true, pred).astype(float)
+		pred_sum = conf_mat.sum(axis=1)
+		conf_norm = conf_mat/pred_sum[:,None]
+
+		return (total,correct_list, conf_norm)
 
 
 	def total_cost(self, data, lmbda, convert=False):
