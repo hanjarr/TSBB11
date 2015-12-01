@@ -137,13 +137,10 @@ def featureExt(filename):
 	np.save("../python features/"+file_name, arrayImage)
 
 	print "Complete"
-
-
 	
 #ANDRA ENDAST DESSA VARDEN, STRANGAR OCH SOKVAGAR FIXAR SIG SJALVA
 levels = 128 		#greyscale levels
 N = 4 				#blockssize
-
 
 filename="1"
 
