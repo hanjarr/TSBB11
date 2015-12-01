@@ -117,7 +117,7 @@ def featureExt(filename):
 	num_features=np.shape(arrayImage)[0]
 	file_name="f"+str(num_features)+"_g"+str(levels)+"_b"+str(N)+"_gau"+"_"+filename
 
-	np.save(file_name, arrayImage)
+	np.save("../python features/"+file_name, arrayImage)
 
 	print "Complete"
 
