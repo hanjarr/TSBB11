@@ -20,7 +20,7 @@ def main():
 	training_features = "../python features/f26_g128_b4_"
 	test_features = "../python features/f26_g128_b4_"
 
-	im_numbers_train = [1,4,5,10,17,25,27,31,39,41,42,43,48,49,52,55,57]
+	im_numbers_train = [1,4,5,10,17,18,25,27,31,39,41,42,43,48,49,52,55,57]
 	im_numbers_test = [18]
 
 	'''Load original for blending'''

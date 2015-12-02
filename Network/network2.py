@@ -159,7 +159,7 @@ class Network(object):
 		n = len(training_data)
 		evaluation_cost, evaluation_accuracy = [], []
 		training_cost, training_accuracy = [], []
-		highest_accuracy = 0
+		highest_accuracy, epoch_num = 0, 0
 		for j in xrange(epochs):
 			random.shuffle(training_data)
 			mini_batches = [
@@ -187,8 +187,12 @@ class Network(object):
 				evaluation_accuracy.extend(accuracy)
 				print "Accuracy on test data (Others, water, roads): " + "\n" + "{}".format(accuracy)
 				print "Accuracy on test data (total):{} % ".format(total) + "\n"
-				accuracy_sum = np.trace(confusion)
 				
+				if not math.isnan(np.trace(confusion)):
+					accuracy_sum = np.trace(confusion)
+				else:
+					accuracy_sum = sum(accuracy)
+
 				''' Save best network'''
 				if (accuracy_sum > highest_accuracy):
 					self.save(save_dir+"/network")
@@ -299,6 +303,7 @@ class Network(object):
 					correct += 1
 			correct_list.append(correct)
 
+		'''Check if some labels are non existent'''
 		i = 0
 		for x in labels:
 			if x == 0:
@@ -307,10 +312,13 @@ class Network(object):
 
 		correct_list = map(truediv, correct_list, labels)
 
+
+		'''Remove nans'''
 		k = 0
 		for x in correct_list:
 			if math.isnan(x):
 				correct_list[k] = np.nan_to_num(x)
+				print correct_list[k]
 			k +=1	
 
 		pred = [x[0] for x in results]
@@ -333,11 +341,21 @@ class Network(object):
 		cost = 0.0
 		for x, y in data:
 			a = self.feedforward(x)
-			if convert: y = vectorized_result(y)
+			if convert: y = self.vectorized_result(y)
 			cost += self.cost.fn(a, y)/len(data)
 		cost += 0.5*(lmbda/len(data))*sum(
 			np.linalg.norm(w)**2 for w in self.weights)
 		return cost
+
+	def vectorized_result(self, j):
+		"""Return a n-dimensional unit vector with a 1.0 in the j'th position
+		and zeroes elsewhere.  This is used to convert a digit (0...n)
+		into a corresponding desired output from the neural network.
+
+		"""
+		e = np.zeros((self.sizes[-1], 1))
+		e[j] = 1.0
+		return e
 
 	def save(self, filename):
 		"""Save the neural network to the file ``filename``."""
@@ -365,16 +383,6 @@ def load(filename):
 	return net
 
 #### Miscellaneous functions
-def vectorized_result(j):
-	"""Return a 10-dimensional unit vector with a 1.0 in the j'th position
-	and zeroes elsewhere.  This is used to convert a digit (0...9)
-	into a corresponding desired output from the neural network.
-
-	"""
-	e = np.zeros((3, 1))
-	e[j] = 1.0
-	return e
-
 def sigmoid(z):
 	"""The sigmoid function."""
 	return 1.0/(1.0+np.exp(-z))
