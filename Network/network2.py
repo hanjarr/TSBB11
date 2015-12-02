@@ -15,6 +15,7 @@ features.
 # Standard library
 import json
 import random
+import math
 import sys
 
 # Third-party libraries
@@ -187,29 +188,19 @@ class Network(object):
 				print "Accuracy on test data (Others, water, roads): " + "\n" + "{}".format(accuracy)
 				print "Accuracy on test data (total):{} % ".format(total) + "\n"
 				accuracy_sum = np.trace(confusion)
-				# accuracy_sum = sum(accuracy)
 				
 				''' Save best network'''
-				if (accuracy_sum > highest_accuracy):# and accuracy[0] > 0.6 and accuracy[1] > 0.6 and accuracy[2] > 0.6):
+				if (accuracy_sum > highest_accuracy):
 					self.save(save_dir+"/network")
 					highest_accuracy = accuracy_sum
 					epoch_num = j
 					test_accuracy = accuracy
 					test_confusion = confusion
 
-					"""Save the neural network info """
-					data = {"sizes": self.sizes,
-					"epochs": epochs,
-					"mini batch size": mini_batch_size,
-					"learning rate": eta,
-					"best evaluation result": test_accuracy,
-					"achieved after epoch": epoch_num}
-					f = open(save_dir + "/info", "w")
-					json.dump(data, f)
-					f.close()
-
 		return evaluation_cost, evaluation_accuracy, \
-			training_cost, training_accuracy,test_confusion
+			training_cost, training_accuracy, \
+			test_accuracy, test_confusion, epoch_num
+
 
 	def update_mini_batch(self, mini_batch, eta, lmbda, n):
 		"""Update the network's weights and biases by applying gradient
@@ -307,7 +298,20 @@ class Network(object):
 				if (x == y and x == i):
 					correct += 1
 			correct_list.append(correct)
+
+		i = 0
+		for x in labels:
+			if x == 0:
+				labels[i] = float('Nan')
+			i +=1
+
 		correct_list = map(truediv, correct_list, labels)
+
+		k = 0
+		for x in correct_list:
+			if math.isnan(x):
+				correct_list[k] = np.nan_to_num(x)
+			k +=1	
 
 		pred = [x[0] for x in results]
 		true = [x[1] for x in results]
