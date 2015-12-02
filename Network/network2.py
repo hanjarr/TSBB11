@@ -155,51 +155,56 @@ class Network(object):
 		are empty if the corresponding flag is not set.
 
 		"""
-		if evaluation_data: n_data = len(evaluation_data)
+		if evaluation_data: 
+			n_data = len(evaluation_data)
 		n = len(training_data)
+		test_classes = len(set([x[1] for x in evaluation_data]))
+		training_classes = len(training_data[0][1])
+
 		evaluation_cost, evaluation_accuracy = [], []
 		training_cost, training_accuracy = [], []
-		highest_accuracy, epoch_num = 0, 0
-		for j in xrange(epochs):
-			random.shuffle(training_data)
-			mini_batches = [
+		test_confusion = np.empty([test_classes,test_classes])
+		test_accuracy, highest_accuracy, epoch_num = 0, 0, 0
+
+		if training_classes != test_classes:
+			print "Error, training data and evaluation data contain different classes"
+		else:
+			for j in xrange(epochs):
+				random.shuffle(training_data)
+				mini_batches = [
 				training_data[k:k+mini_batch_size]
 				for k in xrange(0, n, mini_batch_size)]
-			for mini_batch in mini_batches:
-				self.update_mini_batch(
+				for mini_batch in mini_batches:
+					self.update_mini_batch(
 					mini_batch, eta, lmbda, len(training_data))
-			print "Epoch %s training complete" % j
-			if monitor_training_cost:
-				cost = self.total_cost(training_data, lmbda)
-				training_cost.append(cost)
-				print "Cost on training data: {}".format(cost)
-			if monitor_training_accuracy:
-				total, accuracy, confusion = self.accuracy(training_data, convert=True)
-				training_accuracy.extend(accuracy)
-				print "Accuracy on training data (Others, water, roads): " + "\n" + "{}".format(accuracy)
-				print "Accuracy on training data (total):{} % ".format(total) + "\n"
-			if monitor_evaluation_cost:
-				cost = self.total_cost(evaluation_data, lmbda, convert=True)
-				evaluation_cost.append(cost)
-				print "Cost on evaluation data: {}".format(cost)
-			if monitor_evaluation_accuracy:
-				total, accuracy, confusion = self.accuracy(evaluation_data)
-				evaluation_accuracy.extend(accuracy)
-				print "Accuracy on test data (Others, water, roads): " + "\n" + "{}".format(accuracy)
-				print "Accuracy on test data (total):{} % ".format(total) + "\n"
-				
-				if not math.isnan(np.trace(confusion)):
+				print "Epoch %s training complete" % j
+				if monitor_training_cost:
+					cost = self.total_cost(training_data, lmbda)
+					training_cost.append(cost)
+					print "Cost on training data: {}".format(cost)
+				if monitor_training_accuracy:
+					total, accuracy, confusion = self.accuracy(training_data, convert=True)
+					training_accuracy.extend(accuracy)
+					print "Accuracy on training data (Others, water, roads): " + "\n" + "{}".format(accuracy)
+					print "Accuracy on training data (total):{} % ".format(total) + "\n"
+				if monitor_evaluation_cost:
+					cost = self.total_cost(evaluation_data, lmbda, convert=True)
+					evaluation_cost.append(cost)
+					print "Cost on evaluation data: {}".format(cost)
+				if monitor_evaluation_accuracy:
+					total, accuracy, confusion = self.accuracy(evaluation_data)
+					evaluation_accuracy.extend(accuracy)
+					print "Accuracy on test data (Others, water, roads): " + "\n" + "{}".format(accuracy)
+					print "Accuracy on test data (total):{} % ".format(total) + "\n"
 					accuracy_sum = np.trace(confusion)
-				else:
-					accuracy_sum = sum(accuracy)
 
-				''' Save best network'''
-				if (accuracy_sum > highest_accuracy):
-					self.save(save_dir+"/network")
-					highest_accuracy = accuracy_sum
-					epoch_num = j
-					test_accuracy = accuracy
-					test_confusion = confusion
+					''' Save best network'''
+					if (accuracy_sum > highest_accuracy):
+						self.save(save_dir+"/network")
+						highest_accuracy = accuracy_sum
+						epoch_num = j
+						test_accuracy = accuracy
+						test_confusion = confusion
 
 		return evaluation_cost, evaluation_accuracy, \
 			training_cost, training_accuracy, \

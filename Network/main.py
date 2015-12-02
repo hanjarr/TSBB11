@@ -59,7 +59,7 @@ def main():
 	'''Specify which net to load if you want to load an existing network'''
 	load_net = ""
 
-	utils = Utils(block_dim, input_layer, output_layer, save_dir)
+	utils = Utils(block_dim, input_layer, output_layer,training_osm_array, save_dir)
 	training_data, test_data = utils.loadData(training_osm_array, test_osm_array, training_features_array, test_features_array)
 
 

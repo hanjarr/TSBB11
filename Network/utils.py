@@ -13,27 +13,26 @@ np.set_printoptions(threshold=np.nan)
 
 class Utils(object):
 
-	def __init__(self, block_dim, num_features, num_classes, save_dir):
+	def __init__(self, block_dim, num_features, num_classes, osm_values, save_dir):
 		self.block_dim =block_dim
 		self.num_features = num_features
 		self.num_classes = num_classes
 		self.save_dir = save_dir
+		self.osm_values = sorted(np.unique(osm_values).tolist(),reverse=True)
 
-	def configureData(self, osm_arrays, features, training=False):
+
+	def configureData(self, osm_array, feature_array, training=False):
 
 		'''Calculate number of blocks'''
-		num_blocks = np.shape(features)[1]
-
-		'''Load features for training and testing'''
-		feature_array = features
+		num_blocks = np.shape(feature_array)[1]
 
 		inputs = [np.reshape(feature_array[:,y],(self.num_features,1)) for y in xrange(0,num_blocks)]
 		if training:
-			keys = [self.trainingLabel(osm_arrays[:,x]) for x in xrange(0,num_blocks)]
+			keys = [self.trainingLabel(osm_array[:,x]) for x in xrange(0,num_blocks)]
 			training_data = zip(inputs,keys)
 			input_data = self.reduceTrainingData(training_data)
 		else:
-			keys = [self.testLabel(osm_arrays[:,x]) for x in xrange(0,num_blocks)]
+			keys = [self.testLabel(osm_array[:,x]) for x in xrange(0,num_blocks)]
 			input_data = zip(inputs,keys)
 		return input_data
 
@@ -41,24 +40,24 @@ class Utils(object):
 		class_array = np.zeros((self.num_classes,1))
 		counts = np.bincount(label_array)
 		block_class = np.argmax(counts)
-		if block_class == 255:
-			class_array[0]=1.0
-		elif block_class == 119:
-			class_array[1]=1.0
-		else:
-			class_array[2]=1.0
+		classes = self.osm_values
+		i = 0
+		for value in classes:
+			if block_class == value:
+				class_array[i]=1.0
+			i += 1
 		return class_array
 
 
 	def testLabel(self, label_array):
 		counts = np.bincount(label_array)
 		block_class = np.argmax(counts)
-		if block_class == 255:
-			class_label=0
-		elif block_class == 119:
-			class_label=1
-		else:
-			class_label=2
+		classes = self.osm_values
+		i = 0
+		for value in classes:
+			if block_class == value:
+				class_label=i
+			i += 1
 		return np.int64(class_label)
 
 
