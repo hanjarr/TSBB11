@@ -201,13 +201,30 @@ class Utils(object):
 		image.save(self.save_dir+"/erode_dilate.png")
 		return image
 
-
+	def createAccVector(self,accuracy_results):
+		accuracy_vector = []
+		for i in range(0,len(accuracy_results)):
+			#s = np.sort(accuracy_results[i])
+			#print s
+			#v = s[2] - s[1]
+			v = np.max(accuracy_results[i]) - np.mean(accuracy_results[i]) #int(255*(np.max(accuracy_results[i]) - np.mean(accuracy_results[i])))
+			#print v
+			accuracy_vector.append(v)
+		return accuracy_vector
+	
 	def createImage(self, network, test_data, test_osm, test_original):
 
+		block_dim = self.block_dim
 		test_results = [(np.argmax(network.feedforward(x)), y)	for (x, y) in test_data]
-
+		print "Results created!"
+		
+		accuracy_results = [network.feedforward(x) for (x, y) in test_data]
+		accuracy_vector = self.createAccVector(accuracy_results)
+		
 		resultDim = len(test_results)
 		imDim = np.sqrt(resultDim)
+		
+		# Rearrange test_results from vector to (x,y)-matrix
 		resultImage = np.zeros((int(imDim),int(imDim),3))
 		u=0
 		v=0
@@ -218,7 +235,24 @@ class Utils(object):
 				u=0
 				v=v+1
 		
-		block_dim = self.block_dim
+		resultDim = len(accuracy_results)
+		imDim = np.sqrt(resultDim)
+		
+		# Rearrange accuracy_vector from vector to (x,y)-matrix
+		accuracy_array = np.zeros((int(imDim),int(imDim)))
+		u=0
+		v=0
+		for i in range(0,int(resultDim)):
+			accuracy_array[v,u] = accuracy_vector[i]
+			u=u+1
+			if(u==imDim):
+				u=0
+				v=v+1
+
+		acc_image = np.multiply(np.array(accuracy_array[:,:]),255).astype(np.uint8)
+		acc_image_resized = cv2.resize(acc_image, (0,0), fx=block_dim, fy=block_dim,interpolation=0)
+		cv2.imwrite(self.save_dir+"/out_accuracy.png",acc_image_resized)
+		
 		test_image = np.multiply(np.array(resultImage[:,:,:]),255).astype(np.uint8)
 		
 		# PostProcess images with two different methods (use only one)
@@ -231,6 +265,26 @@ class Utils(object):
 		# Convert from BGR to RGB
 		test_image_array = test_image_array[:,:,::-1].copy()
 		
+		# Create blended accuracy image
+		temp_array = test_image_array.copy()
+		if temp_array.shape[0] == accuracy_array.shape[0]:
+			print "Writing blended accuracy image"
+			test_image_accuracy_blended = temp_array
+			#print test_image_accuracy_blended.dtype
+			#print temp_array.dtype
+			#print accuracy_array.dtype
+			
+			test_image_accuracy_blended[:,:,0] = np.multiply(temp_array[:,:,0],-accuracy_array[:,:])
+			test_image_accuracy_blended[:,:,1] = np.multiply(temp_array[:,:,1],-accuracy_array[:,:])
+			test_image_accuracy_blended[:,:,2] = np.multiply(temp_array[:,:,2],-accuracy_array[:,:])
+			
+			#print test_image_accuracy_blended.shape
+			acc_image_resized = cv2.resize(test_image_accuracy_blended, (0,0), fx=block_dim, fy=block_dim,interpolation=0)
+			cv2.imwrite(self.save_dir+"/out_accuracy_blended.png",acc_image_resized)
+		else:
+			print "Accuracy image and test image not equal size"
+			print temp_array.shape, " not equal to ", accuracy_array.shape
+
 		# Scale up output image by block_dim
 		image_resized = cv2.resize(test_image_array, (0,0), fx=block_dim, fy=block_dim,interpolation=0)
 		cv2.imwrite(self.save_dir+"/out_RGB.png",image_resized)
