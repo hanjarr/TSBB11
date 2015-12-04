@@ -18,9 +18,9 @@ def main():
 
 
 	'''Choose features for training and test'''
-	features_path = "../python features/f26_g128_b4_"
+	feature_path = "../python features/feature_vectors/f26_g128_b4_"
 
-	im_numbers_train = [1,4,5,10,17,21,22,24,25,27,31,39,41,42,43,45,46,48,49,52,55,57,62]
+	im_numbers_train = [1,4,5]#,10,17,21,22,24,25,27,31,39,41,42,43,45,46,48,49,52,55,57,62]
 	#im_numbers_train = [5,11,12,13,21,22,30,31,32,37,38,45,46] ONLY ROAD
 	im_number_test = [11]
 
@@ -37,7 +37,7 @@ def main():
 
 	'''Choose features for training and test'''
 
-	info = map(int, re.findall(r'\d+', test_features))
+	info = map(int, re.findall(r'\d+', feature_path))
 
 	block_dim = info[2]
 	input_layer = info[0]
@@ -46,7 +46,7 @@ def main():
 	hidden_layer_2 = 20
 	output_layer = 3
 
-	epochs = 20
+	epochs = 1
 	mini_batch = 10
 	learning_rate = 0.008
 
