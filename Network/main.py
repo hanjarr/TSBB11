@@ -1,5 +1,6 @@
 from network2 import Network 
 from utils import Utils, inputNetworkArray
+import network2
 import numpy as np
 import random
 import time
@@ -13,26 +14,26 @@ def main():
 
 	
 	'''Load osm images for training and test (validation)'''
-	osm_str ="../images/divided images/rasterized"
+	osm_path ="../images/divided images/rasterized"
 
 
 	'''Choose features for training and test'''
-	training_features = "../python features/f26_g128_b4_"
-	test_features = "../python features/f26_g128_b4_"
+	features_path = "../python features/f26_g128_b4_"
 
-	im_numbers_train = [1,4,5,10,17,18,25,27,31,39,41,42,43,48,49,52,55,57]
-	im_numbers_test = [18]
+	im_numbers_train = [1,4,5,10,17,21,22,24,25,27,31,39,41,42,43,45,46,48,49,52,55,57,62]
+	#im_numbers_train = [5,11,12,13,21,22,30,31,32,37,38,45,46] ONLY ROAD
+	im_number_test = [11]
 
 	'''Load original for blending'''
-	test_original = "../images/divided images/vricon_ortho_pan"+str(im_numbers_test[0])+".png"
+	test_original = "../images/divided images/vricon_ortho_pan"+str(im_number_test[0])+".png"
 
 
 	'''Use new func to generate array elements'''
-	[training_osm_array, training_features_array] = inputNetworkArray(osm_str, training_features, im_numbers_train)
-	[test_osm_array, test_features_array] = inputNetworkArray(osm_str, test_features, im_numbers_test)
+	[training_osm_array, training_features_array] = inputNetworkArray(osm_path, feature_path, im_numbers_train)
+	[test_osm_array, test_features_array] = inputNetworkArray(osm_path, feature_path, im_number_test)
 
 
-	test_osm =cv2.imread(osm_str+str(im_numbers_test[0])+".png")[:,:,0]
+	test_osm =cv2.imread(osm_path+str(im_number_test[0])+".png")[:,:,0]
 
 	'''Choose features for training and test'''
 
@@ -45,7 +46,7 @@ def main():
 	hidden_layer_2 = 20
 	output_layer = 3
 
-	epochs = 1
+	epochs = 20
 	mini_batch = 10
 	learning_rate = 0.008
 
@@ -57,7 +58,7 @@ def main():
 	os.mkdir(save_dir)
 
 	'''Specify which net to load if you want to load an existing network'''
-	load_net = ""
+	load_net = ""#"../saved/2015-12-01-22-41-21/network"
 
 	utils = Utils(block_dim, input_layer, output_layer,training_osm_array, save_dir)
 	training_data, test_data = utils.loadData(training_osm_array, test_osm_array, training_features_array, test_features_array)
@@ -67,11 +68,13 @@ def main():
 	'''Load existing network from folder svaved_network'''
 	if load_net:
 		net = network2.load(load_net)
-		net.accuracy(test_data)
+		total, accuracy, confusion = net.accuracy(test_data)
+		data = {"best evaluation result": accuracy}
+
 	else:
 		net = Network(sizes)
 
-		evaluation_cost, evaluation_accuracy, training_cost, training_accuracy, test_accuracy, test_confusion, epoch_num = \
+		evaluation_cost, evaluation_accuracy, training_cost, training_accuracy, test_confusion, data = \
 		net.SGD(training_data, epochs, mini_batch, learning_rate, save_dir,lmbda=0.5, evaluation_data = test_data, \
 		monitor_training_cost = True, monitor_evaluation_cost = True, monitor_training_accuracy=True, monitor_evaluation_accuracy=True)
 
@@ -90,21 +93,16 @@ def main():
 		if test_confusion.any():
 			utils.plotConfusionMatrix(test_confusion)
 
-	processed_resized = utils.createImage(net, test_data, test_osm, test_original)
-	processed_accuracy = utils.evaluateResult(test_osm,processed_resized).tolist()
+		net = network2.load(save_dir+'/network')
 
-	"""Save the neural network info """
-	data = {"sizes": sizes,
-	"number of input images": len(im_numbers_train),
-	"epochs": epochs,
-	"mini batch size": mini_batch,
-	"learning rate": learning_rate,
-	"best evaluation result": test_accuracy,
-	"evaluation result after process G": processed_accuracy,
-	"achieved after epoch": epoch_num}
+	processed_resized = utils.createImage(net, test_data, test_osm, test_original)
+	processed_accuracy = utils.evaluateResult(test_osm,processed_resized).tolist()	
+
+	data.update({"evaluation result after process G": processed_accuracy,
+		"test image": im_number_test, "training_images": im_numbers_train})
 
 	f = open(save_dir + "/info", "w")
 	json.dump(data, f)
-	f.close()	
+	f.close()
 
 main()

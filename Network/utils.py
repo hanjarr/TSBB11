@@ -41,11 +41,9 @@ class Utils(object):
 		counts = np.bincount(label_array)
 		block_class = np.argmax(counts)
 		classes = self.osm_values
-		i = 0
-		for value in classes:
+		for i,value in enumerate(classes):
 			if block_class == value:
 				class_array[i]=1.0
-			i += 1
 		return class_array
 
 
@@ -53,11 +51,9 @@ class Utils(object):
 		counts = np.bincount(label_array)
 		block_class = np.argmax(counts)
 		classes = self.osm_values
-		i = 0
-		for value in classes:
+		for i, value in enumerate(classes):
 			if block_class == value:
 				class_label=i
-			i += 1
 		return np.int64(class_label)
 
 
@@ -75,7 +71,7 @@ class Utils(object):
 		k=0
 		index=0
 		reduced_data = []
-		while (k<3):
+		while (k<self.num_classes):
 			if(keys[index][k] == 1):
 				reduced_data.append(training_data[index])
 				i = i+1
@@ -113,20 +109,20 @@ class Utils(object):
 		random.shuffle(duplicated_data)
 		return duplicated_data
 		
-	def postProcessG(self,inImage):
-		stl = np.shape(inImage)
+	def postProcessG(self,in_image):
+		stl = np.shape(in_image)
 		image = np.zeros(stl)
-		image[:,:,0] = sf.gaussian_filter(inImage[:,:,0], 10)
-		image[:,:,1] = sf.gaussian_filter(inImage[:,:,1], 5)
-		image[:,:,2] = sf.gaussian_filter(inImage[:,:,2], 1.5)
+		image[:,:,0] = sf.gaussian_filter(in_image[:,:,0], 2)
+		image[:,:,1] = sf.gaussian_filter(in_image[:,:,1], 5)
+		image[:,:,2] = sf.gaussian_filter(in_image[:,:,2], 1.5)
 
-		imSize = np.shape(image)
+		im_size = np.shape(image)
 
-		for i in range(0,imSize[0]):
-			for k in range(0,imSize[1]):
-				maxValue = np.amax(image[i,k,:])
+		for i in range(0,im_size[0]):
+			for k in range(0,im_size[1]):
+				max_value = np.amax(image[i,k,:])
 				for l in range(0,3):
-					if(image[i,k,l] == maxValue):
+					if(image[i,k,l] == max_value):
 						image[i,k,l] = 255
 					else:
 						image[i,k,l] = 0			
@@ -197,8 +193,6 @@ class Utils(object):
 
 		block_dim = self.block_dim
 		test_results = [(np.argmax(network.feedforward(x)), y)	for (x, y) in test_data]
-
-		print "Results created!"
 		
 		accuracy_results = [network.feedforward(x) for (x, y) in test_data]
 		accuracy_vector = self.createAccVector(accuracy_results)		
@@ -217,17 +211,17 @@ class Utils(object):
 				u=0
 				v=v+1
 		
-		resultDim = len(accuracy_results)
-		imDim = np.sqrt(resultDim)
+		result_dim = len(accuracy_results)
+		im_im = np.sqrt(result_dim)
 		
 		# Rearrange accuracy_vector from vector to (x,y)-matrix
-		accuracy_array = np.zeros((int(imDim),int(imDim)))
+		accuracy_array = np.zeros((int(im_dim),int(im_dim)))
 		u=0
 		v=0
-		for i in range(0,int(resultDim)):
+		for i in range(0,int(result_dim)):
 			accuracy_array[v,u] = accuracy_vector[i]
 			u=u+1
-			if(u==imDim):
+			if(u==im_dim):
 				u=0
 				v=v+1
 
@@ -253,7 +247,6 @@ class Utils(object):
 		# Create blended accuracy image
 		temp_array = processed_np.copy()
 		if temp_array.shape[0] == accuracy_array.shape[0]:
-			print "Writing blended accuracy image"
 			test_image_accuracy_blended = temp_array
 			
 			test_image_accuracy_blended[:,:,0] = np.multiply(temp_array[:,:,0],-accuracy_array[:,:])
