@@ -15,6 +15,7 @@ features.
 # Standard library
 import json
 import random
+import math
 import sys
 
 # Third-party libraries
@@ -154,62 +155,61 @@ class Network(object):
 		are empty if the corresponding flag is not set.
 
 		"""
-		if evaluation_data: n_data = len(evaluation_data)
+		if evaluation_data: 
+			n_data = len(evaluation_data)
 		n = len(training_data)
+		test_classes = len(set([x[1] for x in evaluation_data]))
+		training_classes = len(training_data[0][1])
+
 		evaluation_cost, evaluation_accuracy = [], []
 		training_cost, training_accuracy = [], []
-		highest_accuracy = 0
-		for j in xrange(epochs):
-			random.shuffle(training_data)
-			mini_batches = [
+		test_confusion = np.empty([test_classes,test_classes])
+		test_accuracy, highest_accuracy, epoch_num = 0, 0, 0
+
+		if training_classes != test_classes:
+			print "Error, training data and evaluation data contain different classes"
+		else:
+			for j in xrange(epochs):
+				random.shuffle(training_data)
+				mini_batches = [
 				training_data[k:k+mini_batch_size]
 				for k in xrange(0, n, mini_batch_size)]
-			for mini_batch in mini_batches:
-				self.update_mini_batch(
+				for mini_batch in mini_batches:
+					self.update_mini_batch(
 					mini_batch, eta, lmbda, len(training_data))
-			print "Epoch %s training complete" % j
-			if monitor_training_cost:
-				cost = self.total_cost(training_data, lmbda)
-				training_cost.append(cost)
-				print "Cost on training data: {}".format(cost)
-			if monitor_training_accuracy:
-				total, accuracy, confusion = self.accuracy(training_data, convert=True)
-				training_accuracy.extend(accuracy)
-				print "Accuracy on training data (Others, water, roads): " + "\n" + "{}".format(accuracy)
-				print "Accuracy on training data (total):{} % ".format(total) + "\n"
-			if monitor_evaluation_cost:
-				cost = self.total_cost(evaluation_data, lmbda, convert=True)
-				evaluation_cost.append(cost)
-				print "Cost on evaluation data: {}".format(cost)
-			if monitor_evaluation_accuracy:
-				total, accuracy, confusion = self.accuracy(evaluation_data)
-				evaluation_accuracy.extend(accuracy)
-				print "Accuracy on test data (Others, water, roads): " + "\n" + "{}".format(accuracy)
-				print "Accuracy on test data (total):{} % ".format(total) + "\n"
-				accuracy_sum = np.trace(confusion)
-				# accuracy_sum = sum(accuracy)
-				
-				''' Save best network'''
-				if (accuracy_sum > highest_accuracy):# and accuracy[0] > 0.6 and accuracy[1] > 0.6 and accuracy[2] > 0.6):
-					self.save(save_dir+"/network")
-					highest_accuracy = accuracy_sum
-					epoch_num = j
-					test_accuracy = accuracy
-					test_confusion = confusion
+				print "Epoch %s training complete" % j
+				if monitor_training_cost:
+					cost = self.total_cost(training_data, lmbda)
+					training_cost.append(cost)
+					print "Cost on training data: {}".format(cost)
+				if monitor_training_accuracy:
+					total, accuracy, confusion = self.accuracy(training_data, convert=True)
+					training_accuracy.extend(accuracy)
+					print "Accuracy on training data (Others, water, roads): " + "\n" + "{}".format(accuracy)
+					print "Accuracy on training data (total):{} % ".format(total) + "\n"
+				if monitor_evaluation_cost:
+					cost = self.total_cost(evaluation_data, lmbda, convert=True)
+					evaluation_cost.append(cost)
+					print "Cost on evaluation data: {}".format(cost)
+				if monitor_evaluation_accuracy:
+					total, accuracy, confusion = self.accuracy(evaluation_data)
+					evaluation_accuracy.extend(accuracy)
+					print "Accuracy on test data (Others, water, roads): " + "\n" + "{}".format(accuracy)
+					print "Accuracy on test data (total):{} % ".format(total) + "\n"
+					accuracy_sum = np.trace(confusion)
 
-					"""Save the neural network info """
-					data = {"sizes": self.sizes,
-					"epochs": epochs,
-					"mini batch size": mini_batch_size,
-					"learning rate": eta,
-					"best evaluation result": test_accuracy,
-					"achieved after epoch": epoch_num}
-					f = open(save_dir + "/info", "w")
-					json.dump(data, f)
-					f.close()
+					''' Save best network'''
+					if (accuracy_sum > highest_accuracy):
+						self.save(save_dir+"/network")
+						highest_accuracy = accuracy_sum
+						epoch_num = j
+						test_accuracy = accuracy
+						test_confusion = confusion
 
 		return evaluation_cost, evaluation_accuracy, \
-			training_cost, training_accuracy,test_confusion
+			training_cost, training_accuracy, \
+			test_accuracy, test_confusion, epoch_num
+
 
 	def update_mini_batch(self, mini_batch, eta, lmbda, n):
 		"""Update the network's weights and biases by applying gradient
@@ -307,7 +307,24 @@ class Network(object):
 				if (x == y and x == i):
 					correct += 1
 			correct_list.append(correct)
+
+		'''Check if some labels are non existent'''
+		i = 0
+		for x in labels:
+			if x == 0:
+				labels[i] = float('Nan')
+			i +=1
+
 		correct_list = map(truediv, correct_list, labels)
+
+
+		'''Remove nans'''
+		k = 0
+		for x in correct_list:
+			if math.isnan(x):
+				correct_list[k] = np.nan_to_num(x)
+				print correct_list[k]
+			k +=1	
 
 		pred = [x[0] for x in results]
 		true = [x[1] for x in results]
@@ -329,11 +346,21 @@ class Network(object):
 		cost = 0.0
 		for x, y in data:
 			a = self.feedforward(x)
-			if convert: y = vectorized_result(y)
+			if convert: y = self.vectorized_result(y)
 			cost += self.cost.fn(a, y)/len(data)
 		cost += 0.5*(lmbda/len(data))*sum(
 			np.linalg.norm(w)**2 for w in self.weights)
 		return cost
+
+	def vectorized_result(self, j):
+		"""Return a n-dimensional unit vector with a 1.0 in the j'th position
+		and zeroes elsewhere.  This is used to convert a digit (0...n)
+		into a corresponding desired output from the neural network.
+
+		"""
+		e = np.zeros((self.sizes[-1], 1))
+		e[j] = 1.0
+		return e
 
 	def save(self, filename):
 		"""Save the neural network to the file ``filename``."""
@@ -361,16 +388,6 @@ def load(filename):
 	return net
 
 #### Miscellaneous functions
-def vectorized_result(j):
-	"""Return a 10-dimensional unit vector with a 1.0 in the j'th position
-	and zeroes elsewhere.  This is used to convert a digit (0...9)
-	into a corresponding desired output from the neural network.
-
-	"""
-	e = np.zeros((3, 1))
-	e[j] = 1.0
-	return e
-
 def sigmoid(z):
 	"""The sigmoid function."""
 	return 1.0/(1.0+np.exp(-z))

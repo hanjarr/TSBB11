@@ -13,42 +13,26 @@ np.set_printoptions(threshold=np.nan)
 
 class Utils(object):
 
-	def __init__(self, block_dim, num_features, num_classes, save_dir):
+	def __init__(self, block_dim, num_features, num_classes, osm_values, save_dir):
 		self.block_dim =block_dim
 		self.num_features = num_features
 		self.num_classes = num_classes
 		self.save_dir = save_dir
+		self.osm_values = sorted(np.unique(osm_values).tolist(),reverse=True)
 
-	def configureData(self, osm, features, training=False):
+
+	def configureData(self, osm_array, feature_array, training=False):
 
 		'''Calculate number of blocks'''
-		#dim=np.shape(osm)
-
-		#block_dim = self.block_dim
-
-		#num_blocks = dim**2/(block_dim**2)
-		#print dim
-		#print num_blocks
-		num_blocks = np.shape(features)[1]
-
-		'''Divide osm image into blocks '''
-		#osm_blocks = splitImage(osm, block_dim, num_blocks)
-
-		'''Load features for training and testing'''
-		#feature_array = np.float32(np.load(features))
-		feature_array = features
-
-		'''Reshape osm blocks into arrays'''
-		#osm_arrays = np.uint8(np.reshape(osm_blocks, (block_dim**2,num_blocks)))
-		osm_arrays = osm
+		num_blocks = np.shape(feature_array)[1]
 
 		inputs = [np.reshape(feature_array[:,y],(self.num_features,1)) for y in xrange(0,num_blocks)]
 		if training:
-			keys = [self.trainingLabel(osm_arrays[:,x]) for x in xrange(0,num_blocks)]
+			keys = [self.trainingLabel(osm_array[:,x]) for x in xrange(0,num_blocks)]
 			training_data = zip(inputs,keys)
 			input_data = self.reduceTrainingData(training_data)
 		else:
-			keys = [self.testLabel(osm_arrays[:,x]) for x in xrange(0,num_blocks)]
+			keys = [self.testLabel(osm_array[:,x]) for x in xrange(0,num_blocks)]
 			input_data = zip(inputs,keys)
 		return input_data
 
@@ -56,24 +40,24 @@ class Utils(object):
 		class_array = np.zeros((self.num_classes,1))
 		counts = np.bincount(label_array)
 		block_class = np.argmax(counts)
-		if block_class == 255:
-			class_array[0]=1.0
-		elif block_class == 119:
-			class_array[1]=1.0
-		else:
-			class_array[2]=1.0
+		classes = self.osm_values
+		i = 0
+		for value in classes:
+			if block_class == value:
+				class_array[i]=1.0
+			i += 1
 		return class_array
 
 
 	def testLabel(self, label_array):
 		counts = np.bincount(label_array)
 		block_class = np.argmax(counts)
-		if block_class == 255:
-			class_label=0
-		elif block_class == 119:
-			class_label=1
-		else:
-			class_label=2
+		classes = self.osm_values
+		i = 0
+		for value in classes:
+			if block_class == value:
+				class_label=i
+			i += 1
 		return np.int64(class_label)
 
 
@@ -148,7 +132,6 @@ class Utils(object):
 						image[i,k,l] = 0			
 		
 		image = Image.fromarray(image.astype(np.uint8))
-		image.save(self.save_dir+'/processedG.png')
 		return image
 
 	def erodeDilate(self,im):
@@ -198,72 +181,40 @@ class Utils(object):
 					new_color=(255*temp_bool*temp)/max_val
 					post[i,j]=new_color
 		image = Image.fromarray(post.astype(np.uint8))
-		image.save(self.save_dir+"/erode_dilate.png")
 		return image
 
-	def createAccVector(self,accuracy_results):
-		accuracy_vector = []
-		for i in range(0,len(accuracy_results)):
-			#s = np.sort(accuracy_results[i])
-			#print s
-			#v = s[2] - s[1]
-			v = np.max(accuracy_results[i]) - np.mean(accuracy_results[i]) #int(255*(np.max(accuracy_results[i]) - np.mean(accuracy_results[i])))
-			#print v
-			accuracy_vector.append(v)
-		return accuracy_vector
-	
 	def createImage(self, network, test_data, test_osm, test_original):
 
 		block_dim = self.block_dim
 		test_results = [(np.argmax(network.feedforward(x)), y)	for (x, y) in test_data]
-		print "Results created!"
-		
-		accuracy_results = [network.feedforward(x) for (x, y) in test_data]
-		accuracy_vector = self.createAccVector(accuracy_results)
-		
-		resultDim = len(test_results)
-		imDim = np.sqrt(resultDim)
-		
-		# Rearrange test_results from vector to (x,y)-matrix
-		resultImage = np.zeros((int(imDim),int(imDim),3))
-		u=0
-		v=0
-		for i in range(0,int(resultDim)):
-			resultImage[v,u,test_results[i][0]] = 1
-			u=u+1
-			if(u==imDim):
-				u=0
-				v=v+1
-		
-		resultDim = len(accuracy_results)
-		imDim = np.sqrt(resultDim)
-		
-		# Rearrange accuracy_vector from vector to (x,y)-matrix
-		accuracy_array = np.zeros((int(imDim),int(imDim)))
-		u=0
-		v=0
-		for i in range(0,int(resultDim)):
-			accuracy_array[v,u] = accuracy_vector[i]
-			u=u+1
-			if(u==imDim):
-				u=0
-				v=v+1
 
-		acc_image = np.multiply(np.array(accuracy_array[:,:]),255).astype(np.uint8)
-		acc_image_resized = cv2.resize(acc_image, (0,0), fx=block_dim, fy=block_dim,interpolation=0)
-		cv2.imwrite(self.save_dir+"/out_accuracy.png",acc_image_resized)
+		result_dim = len(test_results)
+		im_dim = np.sqrt(result_dim)
+		result_image = np.zeros((int(im_dim),int(im_dim),3))
+		u=0
+		v=0
+		for i in range(0,int(result_dim)):
+			result_image[v,u,test_results[i][0]] = 1
+			u=u+1
+			if(u==im_dim):
+				u=0
+				v=v+1
 		
-		test_image = np.multiply(np.array(resultImage[:,:,:]),255).astype(np.uint8)
+		block_dim = self.block_dim
+		result = np.multiply(np.array(result_image[:,:,:]),255).astype(np.uint8)
 		
-		# PostProcess images with two different methods (use only one)
-		test_image_processed = self.postProcessG(test_image)
-		#test_image_processed = self.erodeDilate(test_image)
+		'''PostProcess images with two different methods (use only one)'''
+		processed = self.postProcessG(result)
+		processed.save(self.save_dir+'/processed.png')
+
+		erode_dilate = self.erodeDilate(result)
+		erode_dilate.save(self.save_dir+"/erode_dilate.png")
 		
-		# Convert from Image object to Numpy array
-		test_image_array = np.array(test_image_processed.getdata(),np.uint8).reshape(test_image_processed.size[1], test_image_processed.size[0], 3)
+		'''Convert from Image object to Numpy array'''
+		processed_np = np.array(processed.getdata(),np.uint8).reshape(processed.size[1], processed.size[0], 3)
 		
 		# Convert from BGR to RGB
-		test_image_array = test_image_array[:,:,::-1].copy()
+		processed_np = processed_np[:,:,::-1].copy()
 		
 		# Create blended accuracy image
 		temp_array = test_image_array.copy()
@@ -286,47 +237,50 @@ class Utils(object):
 			print temp_array.shape, " not equal to ", accuracy_array.shape
 
 		# Scale up output image by block_dim
-		image_resized = cv2.resize(test_image_array, (0,0), fx=block_dim, fy=block_dim,interpolation=0)
-		cv2.imwrite(self.save_dir+"/out_RGB.png",image_resized)
+		processed_resized = cv2.resize(processed_np, (0,0), fx=block_dim, fy=block_dim,interpolation=0)
+		cv2.imwrite(self.save_dir+"/processed_resized.png",processed_resized)
+
+		# Convert from BGR to RGB
+		result = result[:,:,::-1].copy()
+
+		# Scale up output image by block_dim
+		out_resized = cv2.resize(result, (0,0), fx=block_dim, fy=block_dim,interpolation=0)
+		cv2.imwrite(self.save_dir+"/out_resized.png",out_resized)
 
 		# Set all red pixels to white
 		threshold = 100
-		image_nored = image_resized
-		image_nored[image_resized[:,:,2] > threshold,0] = 255
-		image_nored[image_resized[:,:,2] > threshold,1] = 255
-		image_nored[image_resized[:,:,2] > threshold,2] = 255
-		cv2.imwrite(self.save_dir+"/out_nored.png",image_nored)
+		processed_nored = processed_resized.copy()
+		processed_nored[processed_resized[:,:,2] > threshold,0] = 255
+		processed_nored[processed_resized[:,:,2] > threshold,1] = 255
+		processed_nored[processed_resized[:,:,2] > threshold,2] = 255
+		cv2.imwrite(self.save_dir+"/processed_nored.png",processed_nored)
 
 		# Blend result image with source image
-		weight = 0.9 # Weight of source image in blended image, [0.0 - 1.0]
-		image_source = cv2.imread(test_original)
-		image_blended = cv2.addWeighted(image_resized,1-weight,image_source,weight,0)
-		cv2.imwrite(self.save_dir+"/out_blended.png",image_blended)
+		weight = 0.7 # Weight of source image in blended image, [0.0 - 1.0]
+		original = cv2.imread(test_original)
+		original_blended = cv2.addWeighted(processed_resized,1-weight,original,weight,0)
+		cv2.imwrite(self.save_dir+"/original_blended.png",original_blended)
 
-		# Create error image
-		#image_osm = cv2.imread(self.save_dir+"/test_osm.png")
+		processed_correct_red = np.logical_and(test_osm == 255,processed_resized[:,:,2] == 255)
+		processed_correct_green = np.logical_and(test_osm == 119,processed_resized[:,:,1] == 255)
+		processed_correct_blue = np.logical_and(test_osm == 0,processed_resized[:,:,0] == 255)
+		processed_error = processed_resized.copy()
 
-		image_correct_red = np.logical_and(test_osm == 255,image_resized[:,:,2] == 255)
-		image_correct_green = np.logical_and(test_osm == 119,image_resized[:,:,1] == 255)
-		image_correct_blue = np.logical_and(test_osm == 0,image_resized[:,:,0] == 255)
-		image_error = image_resized
+		processed_error[processed_correct_red,0] = 255
+		processed_error[processed_correct_red,1] = 255
+		processed_error[processed_correct_red,2] = 255
 
-		image_error[image_correct_red == True,0] = 255
-		image_error[image_correct_red == True,1] = 255
-		image_error[image_correct_red == True,2] = 255
+		processed_error[processed_correct_green,0] = 255
+		processed_error[processed_correct_green,1] = 255
+		processed_error[processed_correct_green,2] = 255
 
-		image_error[image_correct_green == True,0] = 255
-		image_error[image_correct_green == True,1] = 255
-		image_error[image_correct_green == True,2] = 255
+		processed_error[processed_correct_blue,0] = 255
+		processed_error[processed_correct_blue,1] = 255
+		processed_error[processed_correct_blue,2] = 255
 
-		image_error[image_correct_blue == True,0] = 255
-		image_error[image_correct_blue == True,1] = 255
-		image_error[image_correct_blue == True,2] = 255
+		cv2.imwrite(self.save_dir+"/processed_error.png",processed_error)
 
-		cv2.imwrite(self.save_dir+"/out_error.png",image_error)
-		test_image_processed.save(self.save_dir+"/output.png")
-
-		return image_resized
+		return processed_resized
 
 	def evaluateResult(self, test_image, result_image):
 		if(test_image.shape[0] != result_image.shape[0]):
@@ -353,7 +307,7 @@ class Utils(object):
 			percent = np.true_divide(accuracy,result)
 			percent = percent[::-1].copy()
 			
-			print "Accuracy (Other, Water, Roads): ", 
+			print "Accuracy after processing (Background, Water, Roads): ", 
 			print percent
 			
 			return percent

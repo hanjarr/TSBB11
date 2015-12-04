@@ -3,6 +3,8 @@ from utils import Utils, inputNetworkArray
 import numpy as np
 import random
 import time
+import json
+import sys
 import re
 import os
 import cv2
@@ -11,33 +13,28 @@ def main():
 
 	
 	'''Load osm images for training and test (validation)'''
-	training_osm_str = "../images/divided images/rasterized"
-	test_osm_str ="../images/divided images/rasterized"
+	osm_str ="../images/divided images/rasterized"
 
 
 	'''Choose features for training and test'''
-	training_features = "../python features/f6_g64_b4_gau4_"
-	test_features = "../python features/f6_g64_b4_gau4_"
+	training_features = "../python features/f26_g128_b4_"
+	test_features = "../python features/f26_g128_b4_"
 
-	im_numbers_train = [1,3]
-	im_numbers_test = [2]
+	im_numbers_train = [1,4,5,10,17,18,25,27,31,39,41,42,43,48,49,52,55,57]
+	im_numbers_test = [18]
 
 	'''Load original for blending'''
 	test_original = "../images/divided images/vricon_ortho_pan"+str(im_numbers_test[0])+".png"
 
 
 	'''Use new func to generate array elements'''
-	[training_osm_array, training_features_array] = inputNetworkArray(training_osm_str, training_features, im_numbers_train)
-	[test_osm_array, test_features_array] = inputNetworkArray(test_osm_str, test_features, im_numbers_test)
+	[training_osm_array, training_features_array] = inputNetworkArray(osm_str, training_features, im_numbers_train)
+	[test_osm_array, test_features_array] = inputNetworkArray(osm_str, test_features, im_numbers_test)
 
 
-	#training_osm = cv2.imread(training_osm_str)[:,:,0]
-	test_osm =cv2.imread(test_osm_str+str(im_numbers_test[0])+".png")[:,:,0]
+	test_osm =cv2.imread(osm_str+str(im_numbers_test[0])+".png")[:,:,0]
 
 	'''Choose features for training and test'''
-
-	#training_features = "../python features/graylevels/f35_g128_b4_gau4_train.npy"
-	#test_features = "../python features/graylevels/f35_g128_b4_gau4_test.npy"
 
 	info = map(int, re.findall(r'\d+', test_features))
 
@@ -48,9 +45,11 @@ def main():
 	hidden_layer_2 = 20
 	output_layer = 3
 
-	epochs = 2
+	epochs = 1
 	mini_batch = 10
 	learning_rate = 0.008
+
+	sizes = [input_layer,hidden_layer, hidden_layer_2, output_layer]
 
 	'''Create folder to save data in'''
 	dirfmt = "../saved/%4d-%02d-%02d-%02d-%02d-%02d"
@@ -58,9 +57,9 @@ def main():
 	os.mkdir(save_dir)
 
 	'''Specify which net to load if you want to load an existing network'''
-	load_net = ""#../saved_networks/e15_mb10_lr0.01f35_g128_b4_gau4_train.npy"
+	load_net = ""
 
-	utils = Utils(block_dim, input_layer, output_layer, save_dir)
+	utils = Utils(block_dim, input_layer, output_layer,training_osm_array, save_dir)
 	training_data, test_data = utils.loadData(training_osm_array, test_osm_array, training_features_array, test_features_array)
 
 
@@ -70,9 +69,9 @@ def main():
 		net = network2.load(load_net)
 		net.accuracy(test_data)
 	else:
-		net = Network([input_layer,hidden_layer, output_layer])
+		net = Network(sizes)
 
-		evaluation_cost, evaluation_accuracy, training_cost, training_accuracy, test_confusion = \
+		evaluation_cost, evaluation_accuracy, training_cost, training_accuracy, test_accuracy, test_confusion, epoch_num = \
 		net.SGD(training_data, epochs, mini_batch, learning_rate, save_dir,lmbda=0.5, evaluation_data = test_data, \
 		monitor_training_cost = True, monitor_evaluation_cost = True, monitor_training_accuracy=True, monitor_evaluation_accuracy=True)
 
@@ -91,6 +90,21 @@ def main():
 		if test_confusion.any():
 			utils.plotConfusionMatrix(test_confusion)
 
-	image_resized = utils.createImage(net, test_data, test_osm, test_original)
-	utils.evaluateResult(test_osm,image_resized)	
+	processed_resized = utils.createImage(net, test_data, test_osm, test_original)
+	processed_accuracy = utils.evaluateResult(test_osm,processed_resized).tolist()
+
+	"""Save the neural network info """
+	data = {"sizes": sizes,
+	"number of input images": len(im_numbers_train),
+	"epochs": epochs,
+	"mini batch size": mini_batch,
+	"learning rate": learning_rate,
+	"best evaluation result": test_accuracy,
+	"evaluation result after process G": processed_accuracy,
+	"achieved after epoch": epoch_num}
+
+	f = open(save_dir + "/info", "w")
+	json.dump(data, f)
+	f.close()	
+
 main()
