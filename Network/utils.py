@@ -1,4 +1,4 @@
-import numpy as np 
+import numpy as np
 import cv2
 import os
 import re
@@ -108,13 +108,13 @@ class Utils(object):
 
 		random.shuffle(duplicated_data)
 		return duplicated_data
-		
+
 	def postProcessG(self,in_image):
 		stl = np.shape(in_image)
 		image = np.zeros(stl)
-		image[:,:,0] = sf.gaussian_filter(in_image[:,:,0], 2)
-		image[:,:,1] = sf.gaussian_filter(in_image[:,:,1], 5)
-		image[:,:,2] = sf.gaussian_filter(in_image[:,:,2], 1.5)
+		image[:,:,0] = sf.gaussian_filter(in_image[:,:,0], 2) #Background
+		image[:,:,1] = sf.gaussian_filter(in_image[:,:,1], 5) #water
+		image[:,:,2] = sf.gaussian_filter(in_image[:,:,2], 2) #Road
 
 		im_size = np.shape(image)
 
@@ -125,13 +125,13 @@ class Utils(object):
 					if(image[i,k,l] == max_value):
 						image[i,k,l] = 255
 					else:
-						image[i,k,l] = 0			
-		
+						image[i,k,l] = 0
+
 		image = Image.fromarray(image.astype(np.uint8))
 		return image
 
 	def erodeDilate(self,im):
-		
+
 		im_size=np.shape(im)[0]
 
 		image=np.zeros((im_size,im_size,3))
@@ -147,11 +147,11 @@ class Utils(object):
 		im_op0= cv2.morphologyEx(im0,cv2.MORPH_OPEN,kernel0)
 		im_op1 = cv2.morphologyEx(im1,cv2.MORPH_OPEN,kernel1)
 		im_op2 = cv2.morphologyEx(im2,cv2.MORPH_OPEN,kernel2)
-		
+
 		image[:,:,0]=im_op0
 		image[:,:,1]=im_op1
 		image[:,:,2]=im_op2
-		
+
 		post=image
 		for i in range(0,im_size):
 			for j in range (0, im_size):
@@ -187,81 +187,89 @@ class Utils(object):
 			# -------------------
 			v = np.max(accuracy_results[i]) - np.mean(accuracy_results[i])
 			accuracy_vector.append(v)
-		return accuracy_vector		
+		return accuracy_vector
 
 	def createImage(self, network, test_data, test_osm, test_original):
 
 		block_dim = self.block_dim
 		test_results = [(np.argmax(network.feedforward(x)), y)	for (x, y) in test_data]
-		
+
 		accuracy_results = [network.feedforward(x) for (x, y) in test_data]
-		accuracy_vector = self.createAccVector(accuracy_results)		
+		accuracy_vector = self.createAccVector(accuracy_results)
 
 		result_dim = len(test_results)
 		im_dim = np.sqrt(result_dim)
-		
+
 		# Rearrange test_results from vector to (x,y)-matrix
 		result_image = np.zeros((int(im_dim),int(im_dim),3))
+		accuracy_array = np.zeros((int(im_dim),int(im_dim)))
+		stats_array = np.zeros((int(im_dim),int(im_dim),3))
 		u=0
 		v=0
 		for i in range(0,int(result_dim)):
 			result_image[v,u,test_results[i][0]] = 1
-			u=u+1
-			if(u==im_dim):
-				u=0
-				v=v+1
-		
-		result_dim = len(accuracy_results)
-		im_im = np.sqrt(result_dim)
-		
-		# Rearrange accuracy_vector from vector to (x,y)-matrix
-		accuracy_array = np.zeros((int(im_dim),int(im_dim)))
-		u=0
-		v=0
-		for i in range(0,int(result_dim)):
 			accuracy_array[v,u] = accuracy_vector[i]
+
+			stats_array[v,u,2] = np.array(accuracy_results[i])[0]
+			stats_array[v,u,1] = np.array(accuracy_results[i])[1]
+			stats_array[v,u,0] = np.array(accuracy_results[i])[2]
 			u=u+1
 			if(u==im_dim):
 				u=0
 				v=v+1
 
+		result_dim = len(accuracy_results)
+		im_im = np.sqrt(result_dim)
+
+		''' Write output image of accuracy'''
 		acc_image = np.multiply(np.array(accuracy_array[:,:]),255).astype(np.uint8)
 		acc_image_resized = cv2.resize(acc_image, (0,0), fx=block_dim, fy=block_dim,interpolation=0)
 		cv2.imwrite(self.save_dir+"/out_accuracy.png",acc_image_resized)
-		
+
+		'''Write statistical image '''
+		stats_image = np.multiply(np.array(stats_array[:,:]),255).astype(np.uint8)
+		stats_image_resized = cv2.resize(stats_image, (0,0), fx=block_dim, fy=block_dim,interpolation=0)
+		cv2.imwrite(self.save_dir+"/out_statistics.png",stats_image_resized)
+
 		result = np.multiply(np.array(result_image[:,:,:]),255).astype(np.uint8)
-		
+
 		'''PostProcess images with two different methods (use only one)'''
-		processed = self.postProcessG(result)
-		processed.save(self.save_dir+'/processed.png')
+		processed_stat = self.postProcessG(stats_image)
+		processed_stat.save(self.save_dir+'/processedG_stat.png')
+
+		processed_result = self.postProcessG(result)
+		processed_result.save(self.save_dir+'/processedG_result.png')
 
 		erode_dilate = self.erodeDilate(result)
 		erode_dilate.save(self.save_dir+"/erode_dilate.png")
-		
+
 		'''Convert from Image object to Numpy array'''
-		processed_np = np.array(processed.getdata(),np.uint8).reshape(processed.size[1], processed.size[0], 3)
-		
+		processed_stat_np = np.array(processed_stat.getdata(),np.uint8).reshape(processed_stat.size[1], processed_stat.size[0], 3)
+		processed_result_np = np.array(processed_result.getdata(),np.uint8).reshape(processed_result.size[1], processed_result.size[0], 3)
 		# Convert from BGR to RGB
-		processed_np = processed_np[:,:,::-1].copy()
-		
-		# Create blended accuracy image
-		temp_array = processed_np.copy()
+		#processed_stat_np = processed_stat_np[:,:,::-1].copy()
+		processed_result_np = processed_result_np[:,:,::-1].copy()
+
+		# Scale up output image by block_dim
+		processed_result_resized = cv2.resize(processed_result_np, (0,0), fx=block_dim, fy=block_dim,interpolation=0)
+		cv2.imwrite(self.save_dir+"/processed_result_resized.png",processed_result_resized)
+		processed_stat_resized = cv2.resize(processed_stat_np, (0,0), fx=block_dim, fy=block_dim,interpolation=0)
+		cv2.imwrite(self.save_dir+"/processed_stat_resized.png",processed_stat_resized)
+
+		'''Create blended accuracy image'''
+		temp_array = processed_result_np.copy()
 		if temp_array.shape[0] == accuracy_array.shape[0]:
 			test_image_accuracy_blended = temp_array
-			
 			test_image_accuracy_blended[:,:,0] = np.multiply(temp_array[:,:,0],-accuracy_array[:,:])
 			test_image_accuracy_blended[:,:,1] = np.multiply(temp_array[:,:,1],-accuracy_array[:,:])
 			test_image_accuracy_blended[:,:,2] = np.multiply(temp_array[:,:,2],-accuracy_array[:,:])
-			
+
 			acc_image_resized = cv2.resize(test_image_accuracy_blended, (0,0), fx=block_dim, fy=block_dim,interpolation=0)
 			cv2.imwrite(self.save_dir+"/out_accuracy_blended.png",acc_image_resized)
 		else:
 			print "Accuracy image and test image not equal size"
 			print temp_array.shape, " not equal to ", accuracy_array.shape
 
-		# Scale up output image by block_dim
-		processed_resized = cv2.resize(processed_np, (0,0), fx=block_dim, fy=block_dim,interpolation=0)
-		cv2.imwrite(self.save_dir+"/processed_resized.png",processed_resized)
 
 		# Convert from BGR to RGB
 		result = result[:,:,::-1].copy()
@@ -272,22 +280,22 @@ class Utils(object):
 
 		# Set all red pixels to white
 		threshold = 100
-		processed_nored = processed_resized.copy()
-		processed_nored[processed_resized[:,:,2] > threshold,0] = 255
-		processed_nored[processed_resized[:,:,2] > threshold,1] = 255
-		processed_nored[processed_resized[:,:,2] > threshold,2] = 255
+		processed_nored = processed_result_resized.copy()
+		processed_nored[processed_result_resized[:,:,2] > threshold,0] = 255
+		processed_nored[processed_result_resized[:,:,2] > threshold,1] = 255
+		processed_nored[processed_result_resized[:,:,2] > threshold,2] = 255
 		cv2.imwrite(self.save_dir+"/processed_nored.png",processed_nored)
 
 		# Blend result image with source image
 		weight = 0.7 # Weight of source image in blended image, [0.0 - 1.0]
 		original = cv2.imread(test_original)
-		original_blended = cv2.addWeighted(processed_resized,1-weight,original,weight,0)
+		original_blended = cv2.addWeighted(processed_result_resized,1-weight,original,weight,0)
 		cv2.imwrite(self.save_dir+"/original_blended.png",original_blended)
 
-		processed_correct_red = np.logical_and(test_osm == 255,processed_resized[:,:,2] == 255)
-		processed_correct_green = np.logical_and(test_osm == 119,processed_resized[:,:,1] == 255)
-		processed_correct_blue = np.logical_and(test_osm == 0,processed_resized[:,:,0] == 255)
-		processed_error = processed_resized.copy()
+		processed_correct_red = np.logical_and(test_osm == 255,processed_result_resized[:,:,2] == 255)
+		processed_correct_green = np.logical_and(test_osm == 119,processed_result_resized[:,:,1] == 255)
+		processed_correct_blue = np.logical_and(test_osm == 0,processed_result_resized[:,:,0] == 255)
+		processed_error = processed_result_resized.copy()
 
 		processed_error[processed_correct_red,0] = 255
 		processed_error[processed_correct_red,1] = 255
@@ -303,7 +311,7 @@ class Utils(object):
 
 		cv2.imwrite(self.save_dir+"/processed_error.png",processed_error)
 
-		return processed_resized
+		return processed_result_resized,processed_stat_resized
 
 	def evaluateResult(self, test_image, result_image):
 		if(test_image.shape[0] != result_image.shape[0]):
@@ -312,7 +320,7 @@ class Utils(object):
 		else:
 			accuracy, result = [], []
 			labels = np.unique(test_image)
-			
+
 			layer = 0
 			for label in labels:
 				correct_pixels = 0
@@ -326,13 +334,13 @@ class Utils(object):
 				layer += 1
 				accuracy.append(correct_pixels)
 				result.append(result_pixels)
-			
+
 			percent = np.true_divide(accuracy,result)
 			percent = percent[::-1].copy()
-			
-			print "Accuracy after processing (Background, Water, Roads): ", 
+
+			print "Accuracy after processing (Background, Water, Roads): ",
 			print percent
-			
+
 			return percent
 
 
