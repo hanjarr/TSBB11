@@ -1,4 +1,4 @@
-from network2 import Network 
+from network2 import Network
 from utils import Utils, inputNetworkArray
 import network2
 import numpy as np
@@ -12,7 +12,7 @@ import cv2
 
 def main():
 
-	
+
 	'''Load osm images for training and test (validation)'''
 	osm_path ="../images/divided images/rasterized"
 
@@ -22,6 +22,7 @@ def main():
 
 	im_numbers_train = [1,4,5,7,8,11,13,17,21,22,24,25,29,31,37,38,39,41,45,46,48,49,52,54,55,57,62]
 	im_number_test = [18] #[2] [9] [16] [23] [30] 
+
 
 	'''Load original for blending'''
 	test_original = "../images/divided images/vricon_ortho_pan"+str(im_number_test[0])+".png"
@@ -94,10 +95,11 @@ def main():
 
 		net = network2.load(save_dir+'/network')
 
-	processed_resized = utils.createImage(net, test_data, test_osm, test_original)
-	processed_accuracy = utils.evaluateResult(test_osm,processed_resized).tolist()	
+	processed_result_resized, processed_stat_resized = utils.createImage(net, test_data, test_osm, test_original)
+	processed_result_accuracy = utils.evaluateResult(test_osm,processed_result_resized).tolist()
+	processed_stat_accuracy = utils.evaluateResult(test_osm,processed_stat_resized).tolist()
 
-	data.update({"evaluation result after process G": processed_accuracy,
+	data.update({"evaluation result after process G for original output image": processed_result_accuracy, "evaluation result after process G for statistical image": processed_stat_accuracy,
 		"test image": im_number_test, "training_images": im_numbers_train})
 
 	f = open(save_dir + "/info", "w")
