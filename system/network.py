@@ -1,29 +1,25 @@
 """network.py
 ~~~~~~~~~~~~~~
 
-An improved version of network.py, implementing the stochastic
-gradient descent learning algorithm for a feedforward neural network.
-Improvements include the addition of the cross-entropy cost function,
-regularization, and better initialization of network weights.  Note
-that I have focused on making the code simple, easily readable, and
-easily modifiable.  It is not optimized, and omits many desirable
-features.
+A module to implement the stochastic gradient descent learning
+algorithm for a feedforward neural network.  Gradients are calculated
+using backpropagation.
+
+Improvement include the addition of the cross-entropy cost function,
+regularization, and better initialization of network weights. 
 
 """
 
-#### Libraries
-# Standard library
+''' Libraries '''
 import json
 import random
 import math
 import sys
-
-# Third-party libraries
 import numpy as np
 from operator import truediv
 from sklearn.metrics import confusion_matrix
 
-#### Define the quadratic and cross-entropy cost functions
+''' Define the quadratic and cross-entropy cost functions'''
 
 class QuadraticCost(object):
 

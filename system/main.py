@@ -1,3 +1,11 @@
+"""main.py
+~~~~~~~~~~~~~~
+
+A module to run the system. Includes initialization of network parameters, 
+choise of training and test images, etc. 
+
+"""
+
 from network import Network
 from utils import Utils, inputNetworkArray
 import network
@@ -11,7 +19,6 @@ import os
 import cv2
 
 def main():
-
 
 	''' Specify path to images'''
 	osm_path ="../images/rasterized"
