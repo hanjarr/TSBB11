@@ -72,7 +72,6 @@ h2{
 }
 
 p {
-	width: 50%;
 	font-size: 16px;
 	font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
 }
@@ -84,7 +83,7 @@ a {
 }
 
 hr{
-	width: 50%;
+	width: 100%;
 	float: left;
 	border-style: dotted;
 	border-width: 2px;
@@ -153,4 +152,58 @@ hr{
 #homeDiv{
 	display: block;
 }
+.textDiv{
+	float: left;
+	width: 50%;
+	display: inline-block;
+	padding-bottom: 10vh;
+}
+
+.imageDiv{
+	display: inline-block;
+	position: relative;
+	height: 30vw;
+	width: 30vw;
+	background-image: url('image1.jpg');
+	background-repeat: no-repeat;
+	background-size: 100%;
+	background-position: center;
+	float: right;
+	margin-right: 10%;
+	margin-top: 3vh;
+}
+
+#fourImages{
+	display: inline-block;
+	position: relative;
+	width: 40vw;
+	float: right;
+}
+
+.oneOfFour{
+	width: 16vw;
+	height: 16vw;
+	margin: 1%;
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: 100%;
+	float: left;
+}
+
+#imOne{
+	background-image: url("out_statistics_18.jpg")
+}
+
+#imTwo{
+	background-image: url("blended_18.jpg")
+}
+
+#imThree{
+	background-image: url("out_statistics_40.jpg")
+}
+
+#imFour{
+	background-image: url("blended_40.jpg")
+}
+
 
