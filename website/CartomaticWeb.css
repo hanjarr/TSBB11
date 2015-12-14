@@ -154,7 +154,7 @@ hr{
 }
 .textDiv{
 	float: left;
-	width: 50%;
+	width: 51%;
 	display: inline-block;
 	padding-bottom: 10vh;
 }
@@ -206,4 +206,13 @@ hr{
 	background-image: url("blended_40.jpg")
 }
 
+#systemImage{
+	background-image: url("system.png");
+	width:30%;
+}
 
+#textSecond{
+	display: inline-block;
+	width: 51%;
+	float:left;
+}
