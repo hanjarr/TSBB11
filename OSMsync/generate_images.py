@@ -5,44 +5,41 @@ from osgeo.gdalconst import *
 import numpy as np
 import sys
 import cv2
-import skimage.io
 
+
+#--------------------------------------------------------------------------
+''' This file generates one image of the provided input images and height map of '''
+''' the decided size. Also connects to OSM database to collect osm-file that is rasterized and'''
+''' cut to the correct size.'''
+#--------------------------------------------------------------------------
 # ---------------------------------------------------------------
 # Settings
 # ---------------------------------------------------------------
-
 # Input files
 input_geotiff_files = []
-input_geotiff_files.append("../../CDIO/sydney/ortho_blue/0_1_0_tex.tif")
-input_geotiff_files.append("../../CDIO/sydney/ortho_green/0_1_0_tex.tif")
-input_geotiff_files.append("../../CDIO/sydney/ortho_nir/0_1_0_tex.tif")
-input_geotiff_files.append("../../CDIO/sydney/ortho_pan/0_1_0_tex.tif")
-input_geotiff_files.append("../../CDIO/sydney/ortho_red/0_1_0_tex.tif")
-input_osm_file = "../../CDIO/sydney/ortho_blue/0_1_0_dsm.tif"
+input_geotiff_files.append("../../CDIO/sydney/ortho_blue/0_0_0_tex.tif")
+input_geotiff_files.append("../../CDIO/sydney/ortho_green/0_0_0_tex.tif")
+input_geotiff_files.append("../../CDIO/sydney/ortho_nir/0_0_0_tex.tif")
+input_geotiff_files.append("../../CDIO/sydney/ortho_pan/0_0_0_tex.tif")
+input_geotiff_files.append("../../CDIO/sydney/ortho_red/0_0_0_tex.tif")
+
 # Output files
 output_geotiff_cutout_files = []
-output_geotiff_cutout_files.append("vricon_ortho_blue")
-output_geotiff_cutout_files.append("vricon_ortho_green")
-output_geotiff_cutout_files.append("vricon_ortho_nir")
-output_geotiff_cutout_files.append("vricon_ortho_pan")
-output_geotiff_cutout_files.append("vricon_ortho_red")
-output_osm_file = "vricon_dsm"
-
+output_geotiff_cutout_files.append("vricon_ortho_blue_cutout.png")
+output_geotiff_cutout_files.append("vricon_ortho_green_cutout.png")
+output_geotiff_cutout_files.append("vricon_ortho_nir_cutout.png")
+output_geotiff_cutout_files.append("vricon_ortho_pan_cutout.png")
+output_geotiff_cutout_files.append("vricon_ortho_red_cutout.png")
 output_rasterized_file = "rasterized.png"
-output_rasterized_cutout_file = "rasterized"
-
-output_blended_file = "blended_whole.png"
-output_blended_cutout_file = "blended"
-
-# Test 1000x1000, from 2000,1000
-# Train 2000x2000, from 1500,5500
-# Train 1200x1200, from 3300,700
+output_rasterized_cutout_file = "rasterized_cutout.png"
+output_blended_file = "blended.png"
+output_blended_cutout_file = "blended_cutout.png"
 
 # Output coutout size
-cutout_xmin = 3300 # Left bound, px
-cutout_ymin = 700 # Top bound, px
-cutout_xsize = 1000 # Vertical bound size, px
-cutout_ysize = 1000 # Horizontal bound size, px
+cutout_xmin = 2942 # Left bound, px
+cutout_ymin = 608 # Top bound, px
+cutout_xsize = 2000 # Vertical bound size, px
+cutout_ysize = 2000 # Horizontal bound size, px
 
 # Output file resolution
 pixel_size = 0.5 #(Should be 0.5 to correspond with Vricon images)
@@ -282,34 +279,24 @@ if (cutout_xmin + cutout_xsize > x_res) or (cutout_ymin + cutout_ysize > y_res):
 	sys.exit()
 
 osm = skimage.io.imread(input_osm_file, plugin='tifffile')
-x_range = int(np.floor(x_res/cutout_xsize)*cutout_xsize)
-y_range = int(np.floor(y_res/cutout_ysize)*cutout_ysize)
-counter = 1
-for k in range(0,x_range, int(cutout_xsize)):
-	cutout_xmin = k
-	for j in range(0,y_range, int(cutout_ysize)):
-		cutout_ymin = j
-		c = str(counter)
-		print "Cutout size: " + str(cutout_xsize) + " x " + str(cutout_ysize) + " px"
-		print 'Cut image 1 of 7'
-		cropstring = "gdal_translate -q -srcwin " + str(cutout_xmin) + " " + str(cutout_ymin) + " " + str(cutout_xsize) + " " + str(cutout_ysize) + " " + output_rasterized_file + " " + output_rasterized_cutout_file + c + ".png"
-		os.system(cropstring)
+print "Cutout size: " + str(cutout_xsize) + " x " + str(cutout_ysize) + " px"
+print 'Cut image 1 of 7'
+cropstring = "gdal_translate -q -srcwin " + str(cutout_xmin) + " " + str(cutout_ymin) + " " + str(cutout_xsize) + " " + str(cutout_ysize) + " " + output_rasterized_file + " " + output_rasterized_cutout_file
+os.system(cropstring)
 
-		print 'Cut image 2 of 7'
-		cropstring = "gdal_translate -q -srcwin " + str(cutout_xmin) + " " + str(cutout_ymin) + " " + str(cutout_xsize) + " " + str(cutout_ysize) + " " + output_blended_file + " " + output_blended_cutout_file + c + ".png"
-		os.system(cropstring)
+print 'Cut image 2 of 7'
+cropstring = "gdal_translate -q -srcwin " + str(cutout_xmin) + " " + str(cutout_ymin) + " " + str(cutout_xsize) + " " + str(cutout_ysize) + " " + output_blended_file + " " + output_blended_cutout_file
+os.system(cropstring)
 
-		for i in range(0,len(output_geotiff_cutout_files)):
-			print 'Cut image ' + str(i+2) + ' of ' + str(len(output_geotiff_cutout_files) + 2)
-			cropstring = "gdal_translate -q -srcwin " + str(cutout_xmin) + " " + str(cutout_ymin) + " " + str(cutout_xsize) + " " + str(cutout_ysize) + " " + input_geotiff_files[i] + " " + output_geotiff_cutout_files[i] + c + ".png"
-			os.system(cropstring)
+for i in range(0,len(output_geotiff_cutout_files)):
+	print 'Cut image ' + str(i+2) + ' of ' + str(len(output_geotiff_cutout_files) + 2)
+	cropstring = "gdal_translate -q -srcwin " + str(cutout_xmin) + " " + str(cutout_ymin) + " " + str(cutout_xsize) + " " + str(cutout_ysize) + " " + input_geotiff_files[i] + " " + output_geotiff_cutout_files[i]
+	os.system(cropstring)
 
-		''' save height map '''
-		cutout = osm[k:k+cutout_xsize,j:j+cutout_ysize]
-		cutout = cv2.convertScaleAbs(cutout)
-		cv2.imwrite(str(output_osm_file + str(counter) + '.tif'), cutout)
-		counter = counter +1
-		print counter
+'''Save height map '''
+cutout = osm[k:k+cutout_xsize,j:j+cutout_ysize]
+cutout = cv2.convertScaleAbs(cutout)
+cv2.imwrite(str(output_osm_file + str(counter) + '.tif'), cutout)
 
 # ---------------------------------------------------------------
 # Close datasets and clean temp files
