@@ -1,6 +1,6 @@
-from network2 import Network
+from network import Network
 from utils import Utils, inputNetworkArray
-import network2
+import network
 import numpy as np
 import random
 import time
@@ -71,7 +71,7 @@ def main():
 
 	''' Load existing network from folder saved_network if it is specified'''
 	if load_net:
-		net = network2.load(load_net)
+		net = network.load(load_net)
 		total, accuracy, confusion = net.accuracy(test_data)
 		data = {"best evaluation result": accuracy}
 

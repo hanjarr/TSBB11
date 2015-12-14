@@ -120,7 +120,7 @@ class Utils(object):
 		for i in range(0,im_size[0]):
 			for k in range(0,im_size[1]):
 				max_value = np.amax(image[i,k,:])
-				for l in range(0,3):
+				for l in range(0,self.num_classes):
 					if(image[i,k,l] == max_value):
 						image[i,k,l] = 255
 					else:
@@ -181,9 +181,6 @@ class Utils(object):
 	def createAccVector(self,accuracy_results):
 		accuracy_vector = []
 		for i in range(0,len(accuracy_results)):
-			# -------------------
-			# ToDo: Better accuracy measurement! Now max-mean. Other?????
-			# -------------------
 			v = np.max(accuracy_results[i]) - np.mean(accuracy_results[i])
 			accuracy_vector.append(v)
 		return accuracy_vector
