@@ -64,7 +64,6 @@ class Utils(object):
 		keys = [x[1] for x in training_data]
 
 		num_keys = sum(keys)
-		print num_keys
 		min_key = np.min(num_keys)
 
 		i=0
@@ -289,7 +288,7 @@ class Utils(object):
 		# Blend result image with source image
 		weight = 0.7 # Weight of source image in blended image, [0.0 - 1.0]
 		original = cv2.imread(test_original)
-		original_blended = cv2.addWeighted(processed_result_resized,1-weight,original,weight,0)
+		original_blended = cv2.addWeighted(processed_stat_resized,1-weight,original,weight,0)
 		cv2.imwrite(self.save_dir+"/original_blended.png",original_blended)
 
 		processed_correct_red = np.logical_and(test_osm == 255,processed_result_resized[:,:,2] == 255)
@@ -297,48 +296,41 @@ class Utils(object):
 		processed_correct_blue = np.logical_and(test_osm == 0,processed_result_resized[:,:,0] == 255)
 		processed_error = processed_result_resized.copy()
 
-		processed_error[processed_correct_red,0] = 255
-		processed_error[processed_correct_red,1] = 255
-		processed_error[processed_correct_red,2] = 255
-
-		processed_error[processed_correct_green,0] = 255
-		processed_error[processed_correct_green,1] = 255
-		processed_error[processed_correct_green,2] = 255
-
-		processed_error[processed_correct_blue,0] = 255
-		processed_error[processed_correct_blue,1] = 255
-		processed_error[processed_correct_blue,2] = 255
+		processed_error[processed_correct_red,:] = 255
+		processed_error[processed_correct_green,:] = 255
+		processed_error[processed_correct_blue,:] = 255
 
 		cv2.imwrite(self.save_dir+"/processed_error.png",processed_error)
 
 		return processed_result_resized,processed_stat_resized
 
-	def evaluateResult(self, test_image, result_image):
-		if(test_image.shape[0] != result_image.shape[0]):
+	def evaluateResult(self, test_osm, processed_output):
+		if(test_osm.shape[0] != processed_output.shape[0]):
 			print "Error, not equal image sizes"
 			return None
 		else:
-			accuracy, result = [], []
-			labels = np.unique(test_image)
+			correct, total = [], []
+			labels = np.unique(test_osm)
+			layers = range(0,self.num_classes)
+			classes = ['Background','Water','Roads']
 
-			layer = 0
-			for label in labels:
-				correct_pixels = 0
-				result_pixels = 0
-				for x in range(0,test_image.shape[0]):
-					for y in range (0,test_image.shape[1]):
-						if(result_image[x,y,layer] == 255 and test_image[x,y] == label):
-							correct_pixels = correct_pixels+1
-						if(test_image[x,y] == label):
-							result_pixels +=1
-				layer += 1
-				accuracy.append(correct_pixels)
-				result.append(result_pixels)
+			### Check if there is water present in the test image ###
+			if len(labels) < self.num_classes:
+				layers.remove(1)
+				classes.remove('Water')
 
-			percent = np.true_divide(accuracy,result)
+			### Calculate number of correctly classified blocks ###
+			for i,label in enumerate(labels):
+						pred_class = processed_output[:,:,layers[i]] == 255 
+						actual_class = test_osm == label
+						correct_pixels = np.sum(np.logical_and(pred_class,actual_class))
+						total_class = np.sum(actual_class)
+						correct.append(correct_pixels)
+						total.append(total_class)
+			percent = np.true_divide(correct,total)
 			percent = percent[::-1].copy()
 
-			print "Accuracy after processing (Background, Water, Roads): ",
+			print "Correctly classified after processing {}: ".format(classes)
 			print percent
 
 			return percent
@@ -386,17 +378,15 @@ class Utils(object):
 		plt.colorbar()
 		plt.savefig(self.save_dir + "/confusion")
 
-	def loadData(self, training_osm, test_osm, training_features, test_features):
+	def loadData(self, osm, features, training = False):
 
-		training_data = self.configureData(training_osm, training_features, training = True)
-		test_data = self.configureData(test_osm, test_features)
+		input_data = self.configureData(osm, features, training)
 
-		return (training_data,test_data)
+		return input_data
 
 def splitImage(image_array, block_dim, num_blocks):
 
 	image_blocks = np.zeros((block_dim,block_dim,num_blocks))
-
 	iterations = int(num_blocks**0.5)
 
 	i = 0
@@ -407,34 +397,34 @@ def splitImage(image_array, block_dim, num_blocks):
 	return image_blocks
 
 def inputNetworkArray(osm_name, feature_name, im_numbers):
-    total_feature_vector = []
-    total_osm_vector = []
-    j = 1
-    for i in im_numbers:
-        '''Load osm image'''
-        osm = cv2.imread(str(osm_name+ str(i) + '.png'))
-        if osm is None:
-            raise IOError("cannot load file")
-        osm = osm[:,:,0]
-        '''Load features for training and testing'''
-        feature_array = np.float32(np.load(str(feature_name + str(i) + '.npy')))
+	total_feature_vector = []
+	total_osm_vector = []
+	j = 1
+	for i in im_numbers:
+		'''Load osm image'''
+		osm = cv2.imread(str(osm_name+ str(i) + '.png'))
+		if osm is None:
+			raise IOError("cannot load file")
+		osm = osm[:,:,0]
+		'''Load features for training and testing'''
+		feature_array = np.float32(np.load(str(feature_name + str(i) + '.npy')))
 
-        '''Calculate number of blocks'''
-        info = map(int, re.findall(r'\d+', feature_name))
-    	block_dim = info[2]
-        dim=np.shape(osm)[0]
-        num_blocks = feature_array.shape[1] #lenght of feature vector
+		'''Calculate number of blocks'''
+		info = map(int, re.findall(r'\d+', feature_name))
+		block_dim = info[2]
+		dim=np.shape(osm)[0]
+		num_blocks = feature_array.shape[1] 
 
-        '''Divide osm image into blocks '''
-        osm_blocks = splitImage(osm,block_dim,num_blocks)
-        '''Reshape osm blocks into arrays'''
-        osm_arrays = np.uint8(np.reshape(osm_blocks, (block_dim**2,num_blocks)))
-        '''Append vectors'''
-        if j==1:
-            total_osm_vector = osm_arrays
-            total_feature_vector = feature_array
-        else:
-            total_osm_vector = np.append(total_osm_vector,osm_arrays,axis=1)
-            total_feature_vector = np.append(total_feature_vector,feature_array,axis=1)
-        j = j+1
-    return total_osm_vector, total_feature_vector
+		'''Divide osm image into blocks '''
+		osm_blocks = splitImage(osm,block_dim,num_blocks)
+		'''Reshape osm blocks into arrays'''
+		osm_arrays = np.uint8(np.reshape(osm_blocks, (block_dim**2,num_blocks)))
+		'''Append vectors'''
+		if j==1:
+			total_osm_vector = osm_arrays
+			total_feature_vector = feature_array
+		else:
+			total_osm_vector = np.append(total_osm_vector,osm_arrays,axis=1)
+			total_feature_vector = np.append(total_feature_vector,feature_array,axis=1)
+		j = j+1
+	return total_osm_vector, total_feature_vector

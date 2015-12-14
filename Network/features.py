@@ -2,7 +2,6 @@ import cv2
 import numpy as np
 import scipy
 import skimage
-#import scipy.ndimage.filters as sf
 from skimage.feature import greycomatrix, greycoprops
 from PIL import Image
 import utils
@@ -12,6 +11,8 @@ global levels, N, gaussNr
 
 np.set_printoptions(threshold = np.nan)
 
+
+'''gray level co-occurence matrix, function that creates the features homogeneity,energy, dissimilarity and ASM'''
 def imStats(im_array,levels):
 	array_size=np.shape(im_array)[2]
 
@@ -54,6 +55,7 @@ def gaussFilt(im,filt_const):
 
 	return im
 
+'''takes out the mean for ech block'''
 def block_mean(im_array):
 
 	array_size=np.shape(im_array)[2]
@@ -63,13 +65,16 @@ def block_mean(im_array):
 	mean_array/=np.amax(mean_array[:])
 	return mean_array
 
+'''main function for the features'''
 def featureExt(filename):
 
 	num_features=0
 	div=256/levels
+
+	''' defines height map'''
 	im_height="../images/divided images/vricon_dsm" + filename +".tif"
 
-	# Import the images
+	'''Import the images'''
 	im_blue = cv2.imread("../images/divided images/vricon_ortho_blue" + filename +".png")
 	im_red = cv2.imread("../images/divided images/vricon_ortho_red" + filename +".png")
 	im_green = cv2.imread("../images/divided images/vricon_ortho_green" + filename +".png")
@@ -79,26 +84,28 @@ def featureExt(filename):
 	num_blocks=np.shape(im_blue)[0]**2/(N**2)
 
 
-	#mean and graylevels
+	'''mean and graylevels'''
 	imageB = np.floor((im_blue[:,:,0]+im_blue[:,:,1]+im_blue[:,:,2])/(3.0*div))
 	imageR = np.floor((im_red[:,:,0]+im_red[:,:,1]+im_red[:,:,2])/(3.0*div))
 	imageG = np.floor((im_green[:,:,0]+im_green[:,:,1]+im_green[:,:,2])/(3.0*div))
 	imageN = np.floor((im_nir[:,:,0]+im_nir[:,:,1]+im_nir[:,:,2])/(3.0*div))
 	imageP = np.floor((im_pan[:,:,0]+im_pan[:,:,1]+im_pan[:,:,2])/(3.0*div))
 
-	#split images into arrays
+	'''split images into arrays'''
 	splitB=utils.splitImage(imageB,N,num_blocks)
 	splitR=utils.splitImage(imageR,N,num_blocks)
 	splitG=utils.splitImage(imageG,N,num_blocks)
 	splitN=utils.splitImage(imageN,N,num_blocks)
 	splitP=utils.splitImage(imageP,N,num_blocks)
 
+	'''take out the mean for each block in each image'''
 	meanB=block_mean(splitB)
 	meanR=block_mean(splitR)
 	meanG=block_mean(splitG)
 	meanN=block_mean(splitN)
 	meanP=block_mean(splitP)
 	
+	'''runs the gray level co-occurence function for each image'''
 	start = timeit.default_timer()
 	print "Start"
 	statsB=imStats(splitB,levels)
@@ -117,8 +124,10 @@ def featureExt(filename):
 	stop = timeit.default_timer()
 	print "Stop, tid:", stop - start
 
+	'''create the height function'''
 	height=heightFeatures.heightFeatures(im_height,N,"none")
 
+	'''append all feature to one matrix'''
 	arrayImage=np.append(meanB,meanR,axis=0)
 	arrayImage=np.append(arrayImage,meanG,axis=0)
 	arrayImage=np.append(arrayImage,meanN,axis=0)
@@ -130,7 +139,7 @@ def featureExt(filename):
 	arrayImage=np.append(arrayImage,statsP,axis=0)
 	arrayImage=np.append(arrayImage,height,axis=0)
 
-	#Save data to file
+	'''Save data to file'''
 	num_features=np.shape(arrayImage)[0]
 	file_name="f"+str(num_features)+"_g"+str(levels)+"_b"+str(N)+"_"+filename
 
@@ -138,10 +147,11 @@ def featureExt(filename):
 
 	print "Complete"
 	
-#ANDRA ENDAST DESSA VARDEN, STRANGAR OCH SOKVAGAR FIXAR SIG SJALVA
+'''defines graylevels and blocksize'''
 levels = 128 		#greyscale levels
 N = 4 				#blockssize
 
+'''which image that should be runned'''
 filename="3"
 
 featureExt(filename)
