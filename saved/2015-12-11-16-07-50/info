@@ -1,0 +1,1 @@
+{"test image": [60], "evaluation result after process G for original output image": [0.8266708617799835, 0.8657790770630942], "evaluation result after process G for statistical image": [0.8343004317145888, 0.8841192247495466], "training_images": [1], "best evaluation result": [0.7492633673028921, 0.0, 0.7957035911901921]}
