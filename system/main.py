@@ -22,7 +22,7 @@ def main():
 
 	''' Choose cutouts to use for training and testing'''
 	im_numbers_train = [1,4,5,7,8,11,13,17,21,22,24,25,29,31,37,38,39,41,45,46,48,49,52,54,55,57,62]
-	im_number_test = [18] #[2] [9] [16] [23] [30] 
+	im_number_test = [18]
 
 
 	''' Load original image for blending'''
@@ -65,7 +65,7 @@ def main():
 	'''Create utils object'''
 	utils = Utils(block_dim, input_layer, output_layer,training_osm_array, save_dir)
 
-	''' Load validation data'''
+	''' Configure validation data'''
 	test_data = utils.loadData(test_osm_array, test_features_array)
 
 
