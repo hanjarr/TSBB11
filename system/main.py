@@ -46,7 +46,8 @@ def main():
 	save_dir = dirfmt % time.localtime()[0:6]
 	os.mkdir(save_dir)
 
-	''' Specify which net to load if you want to load an existing network'''
+	''' Specify which net to load if you want to load an existing network. Specify empty string "" the training 
+	module is wanted '''
 	load_net = "../saved/2015-12-09-18-05-21/network"
 
 	''' Imread ground truth test image''' 
@@ -109,7 +110,7 @@ def main():
 			utils.plotConfusionMatrix(test_confusion)
 
 		''' Load the best network after training for testing'''
-		net = network2.load(save_dir+'/network')
+		net = network.load(save_dir+'/network')
 
 
 	''' Create images from the classifications'''
@@ -124,6 +125,7 @@ def main():
 		"evaluation result after process G for statistical image": processed_stat_accuracy,
 		"test image": im_number_test, "training_images": im_numbers_train})
 
+	''' Saves info file to specified folder'''
 	f = open(save_dir + "/info", "w")
 	json.dump(data, f)
 	f.close()
