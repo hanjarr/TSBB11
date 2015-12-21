@@ -1,15 +1,19 @@
+"""utils.py
+~~~~~~~~~~~~~~
+
+A module to implement help functions used to process the data before it si feeded
+to the neural network. Plotting functions are also included.
+
+"""
 import numpy as np
 import cv2
 import os
 import re
-import glob
 import math
 import random
 import scipy.ndimage.filters as sf
 import matplotlib.pyplot as plt
 from PIL import Image
-
-np.set_printoptions(threshold=np.nan)
 
 class Utils(object):
 
@@ -23,9 +27,10 @@ class Utils(object):
 
 	def configureData(self, osm_array, feature_array, training=False):
 
-		'''Calculate number of blocks'''
+		'''Extract the number of blocks'''
 		num_blocks = np.shape(feature_array)[1]
 
+		''' Arrange data in lists of tuples'''
 		inputs = [np.reshape(feature_array[:,y],(self.num_features,1)) for y in xrange(0,num_blocks)]
 		if training:
 			keys = [self.trainingLabel(osm_array[:,x]) for x in xrange(0,num_blocks)]
@@ -57,12 +62,11 @@ class Utils(object):
 		return np.int64(class_label)
 
 
-	'''SORT OUT SAME AMOUNT OF EACH LABEL'''
+	''' Reduce data due to imbalance within the classes'''
 	def reduceTrainingData(self, training_data):
 
 		random.shuffle(training_data)
 		keys = [x[1] for x in training_data]
-
 		num_keys = sum(keys)
 		min_key = np.min(num_keys)
 
@@ -81,22 +85,19 @@ class Utils(object):
 			index +=1
 		return reduced_data
 
-		'''SORT OUT SAME AMOUNT OF EACH LABEL'''
+	''' Duplcate data due to imbalance within the classes (not used)'''
 	def duplicateTrainingData(self, training_data):
 
 		keys = [x[1] for x in training_data]
-
 		num_keys = sum(keys)
 		max_key = np.max(num_keys)
 
 		duplicated_data = []
-
 		for i in range(0,len(num_keys)):
 			separated_data = range(num_keys[i])
 			duplication = int(math.ceil(max_key/num_keys[i]))
 
 			index = 0
-
 			for k in range(0,sum(num_keys)):
 				if (keys[k][i] == 1):
 					separated_data[index] = training_data[k]
@@ -104,10 +105,10 @@ class Utils(object):
 			separated_data = separated_data*duplication
 			duplicated_data += separated_data
 
-
 		random.shuffle(duplicated_data)
 		return duplicated_data
 
+	''' Post process the classification output using Gaussian filters'''
 	def postProcessG(self,in_image):
 		stl = np.shape(in_image)
 		image = np.zeros(stl)
@@ -116,23 +117,21 @@ class Utils(object):
 		image[:,:,2] = sf.gaussian_filter(in_image[:,:,2], 2) 
 
 		im_size = np.shape(image)
-
 		for i in range(0,im_size[0]):
 			for k in range(0,im_size[1]):
 				max_value = np.amax(image[i,k,:])
-				for l in range(0,3):
+				for l in range(0,self.num_classes):
 					if(image[i,k,l] == max_value):
 						image[i,k,l] = 255
 					else:
 						image[i,k,l] = 0
-
 		image = Image.fromarray(image.astype(np.uint8))
 		return image
 
+	''' Post processing using erode dilate'''
 	def erodeDilate(self,im):
 
 		im_size=np.shape(im)[0]
-
 		image=np.zeros((im_size,im_size,3))
 
 		kernel0 = np.ones((2,2),np.uint8)
@@ -181,13 +180,11 @@ class Utils(object):
 	def createAccVector(self,accuracy_results):
 		accuracy_vector = []
 		for i in range(0,len(accuracy_results)):
-			# -------------------
-			# ToDo: Better accuracy measurement! Now max-mean. Other?????
-			# -------------------
 			v = np.max(accuracy_results[i]) - np.mean(accuracy_results[i])
 			accuracy_vector.append(v)
 		return accuracy_vector
 
+	''' Function to create and save images'''
 	def createImage(self, network, test_data, test_osm, test_original):
 
 		block_dim = self.block_dim
@@ -199,7 +196,7 @@ class Utils(object):
 		result_dim = len(test_results)
 		im_dim = np.sqrt(result_dim)
 
-		# Rearrange test_results from vector to (x,y)-matrix
+		''' Rearrange test_results from vector to (x,y)-matrix'''
 		result_image = np.zeros((int(im_dim),int(im_dim),3))
 		accuracy_array = np.zeros((int(im_dim),int(im_dim)))
 		stats_array = np.zeros((int(im_dim),int(im_dim),3))
@@ -215,8 +212,7 @@ class Utils(object):
 			u=u+1
 			if(u==im_dim):
 				u=0
-				v=v+1
-
+				v=v+1 
 		result_dim = len(accuracy_results)
 		im_im = np.sqrt(result_dim)
 
@@ -225,14 +221,14 @@ class Utils(object):
 		acc_image_resized = cv2.resize(acc_image, (0,0), fx=block_dim, fy=block_dim,interpolation=0)
 		cv2.imwrite(self.save_dir+"/out_accuracy.png",acc_image_resized)
 
-		'''Write statistical image '''
+		''' Write statistical image '''
 		stats_image = np.multiply(np.array(stats_array[:,:]),255).astype(np.uint8)
 		stats_image_resized = cv2.resize(stats_image, (0,0), fx=block_dim, fy=block_dim,interpolation=0)
 		cv2.imwrite(self.save_dir+"/out_statistics.png",stats_image_resized)
 
 		result = np.multiply(np.array(result_image[:,:,:]),255).astype(np.uint8)
 
-		'''PostProcess images with two different methods (use only one)'''
+		''' PostProcess images with two different methods (use only one)'''
 		processed_stat = self.postProcessG(stats_image)
 		processed_stat.save(self.save_dir+'/processedG_stat.png')
 
@@ -242,7 +238,7 @@ class Utils(object):
 		erode_dilate = self.erodeDilate(result)
 		erode_dilate.save(self.save_dir+"/erode_dilate.png")
 
-		'''Convert from Image object to Numpy array'''
+		''' Convert from Image object to Numpy array'''
 		processed_stat_np = np.array(processed_stat.getdata(),np.uint8).reshape(processed_stat.size[1], processed_stat.size[0], 3)
 		processed_result_np = np.array(processed_result.getdata(),np.uint8).reshape(processed_result.size[1], processed_result.size[0], 3)
 		
@@ -255,7 +251,7 @@ class Utils(object):
 		processed_stat_resized = cv2.resize(processed_stat_np, (0,0), fx=block_dim, fy=block_dim,interpolation=0)
 		cv2.imwrite(self.save_dir+"/processed_stat_resized.png",processed_stat_resized)
 
-		'''Create blended accuracy image'''
+		''' Create blended accuracy image'''
 		temp_array = processed_result_np.copy()
 		if temp_array.shape[0] == accuracy_array.shape[0]:
 			test_image_accuracy_blended = temp_array
@@ -300,7 +296,6 @@ class Utils(object):
 		processed_error[processed_correct_blue,:] = 255
 
 		cv2.imwrite(self.save_dir+"/processed_error.png",processed_error)
-
 		return processed_result_resized,processed_stat_resized
 
 	def evaluateResult(self, test_osm, processed_output):
@@ -334,7 +329,7 @@ class Utils(object):
 
 			return percent
 
-
+	''' Function for plotting accuracy'''
 	def plotAccuracy(self, accuracy, name):
 		others = accuracy[0::self.num_classes]
 		water = accuracy[1::self.num_classes]
@@ -351,16 +346,17 @@ class Utils(object):
 		plt.savefig(self.save_dir + name + ".png")
 		plt.clf()
 
+	''' Function for plotting cost'''
 	def plotCost(self, training_cost, evaluation_cost):
 		line1, = plt.plot(training_cost)
 		line2, = plt.plot(evaluation_cost)
-
 		plt.ylabel('Cost')
 		plt.xlabel('Epochs')
 		plt.legend([line1,line2],["Training", "Evaluation"])
 		plt.savefig(self.save_dir+"/cost.png")
 		plt.clf()
 
+	''' Function for plotting confusion matrix'''
 	def plotConfusionMatrix(self, cm):
 		labels=['Background', 'Water', 'Road']
 
@@ -378,16 +374,14 @@ class Utils(object):
 		plt.savefig(self.save_dir + "/confusion")
 
 	def loadData(self, osm, features, training = False):
-
 		input_data = self.configureData(osm, features, training)
-
 		return input_data
 
+''' Help function to split image into blocks'''
 def splitImage(image_array, block_dim, num_blocks):
 
 	image_blocks = np.zeros((block_dim,block_dim,num_blocks))
 	iterations = int(num_blocks**0.5)
-
 	i = 0
 	for k in range(0,iterations):
 		for j in range(0,iterations):
@@ -400,23 +394,23 @@ def inputNetworkArray(osm_name, feature_name, im_numbers):
 	total_osm_vector = []
 	j = 1
 	for i in im_numbers:
-		'''Load osm image'''
+		''' Load osm image'''
 		osm = cv2.imread(str(osm_name+ str(i) + '.png'))
 		if osm is None:
 			raise IOError("Cannot load file")
 		osm = osm[:,:,0]
-		'''Load features for training and testing'''
+		''' Load features for training and testing'''
 		feature_array = np.float32(np.load(str(feature_name + str(i) + '.npy')))
 
-		'''Calculate number of blocks'''
+		''' Calculate number of blocks'''
 		info = map(int, re.findall(r'\d+', feature_name))
 		block_dim = info[2]
 		dim=np.shape(osm)[0]
 		num_blocks = feature_array.shape[1] 
 
-		'''Divide osm image into blocks '''
+		''' Divide osm image into blocks '''
 		osm_blocks = splitImage(osm,block_dim,num_blocks)
-		'''Reshape osm blocks into arrays'''
+		''' Reshape osm blocks into arrays'''
 		osm_arrays = np.uint8(np.reshape(osm_blocks, (block_dim**2,num_blocks)))
 		'''Append vectors'''
 		if j==1:

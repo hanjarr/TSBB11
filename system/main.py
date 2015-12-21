@@ -1,6 +1,14 @@
-from network2 import Network
+"""main.py
+~~~~~~~~~~~~~~
+
+A module to run the system. Includes initialization of network parameters, 
+choise of training and test images, etc. 
+
+"""
+
+from network import Network
 from utils import Utils, inputNetworkArray
-import network2
+import network
 import numpy as np
 import random
 import time
@@ -12,7 +20,6 @@ import cv2
 
 def main():
 
-
 	''' Specify path to images'''
 	osm_path ="../images/rasterized"
 
@@ -22,7 +29,7 @@ def main():
 
 	''' Choose cutouts to use for training and testing'''
 	im_numbers_train = [1,4,5,7,8,11,13,17,21,22,24,25,29,31,37,38,39,41,45,46,48,49,52,54,55,57,62]
-	im_number_test = [18] #[2] [9] [16] [23] [30] 
+	im_number_test = [18]
 
 
 	''' Load original image for blending'''
@@ -39,7 +46,8 @@ def main():
 	save_dir = dirfmt % time.localtime()[0:6]
 	os.mkdir(save_dir)
 
-	''' Specify which net to load if you want to load an existing network'''
+	''' Specify which net to load if you want to load an existing network. Specify empty string "" the training 
+	module is wanted '''
 	load_net = "../saved/2015-12-09-18-05-21/network"
 
 	''' Imread ground truth test image''' 
@@ -65,13 +73,13 @@ def main():
 	'''Create utils object'''
 	utils = Utils(block_dim, input_layer, output_layer,training_osm_array, save_dir)
 
-	''' Load validation data'''
+	''' Configure validation data'''
 	test_data = utils.loadData(test_osm_array, test_features_array)
 
 
 	''' Load existing network from folder saved_network if it is specified'''
 	if load_net:
-		net = network2.load(load_net)
+		net = network.load(load_net)
 		total, accuracy, confusion = net.accuracy(test_data)
 		data = {"best evaluation result": accuracy}
 
@@ -102,7 +110,7 @@ def main():
 			utils.plotConfusionMatrix(test_confusion)
 
 		''' Load the best network after training for testing'''
-		net = network2.load(save_dir+'/network')
+		net = network.load(save_dir+'/network')
 
 
 	''' Create images from the classifications'''
@@ -117,6 +125,7 @@ def main():
 		"evaluation result after process G for statistical image": processed_stat_accuracy,
 		"test image": im_number_test, "training_images": im_numbers_train})
 
+	''' Saves info file to specified folder'''
 	f = open(save_dir + "/info", "w")
 	json.dump(data, f)
 	f.close()
