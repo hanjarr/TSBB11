@@ -1,0 +1,130 @@
+<!DOCTYPW html>
+<html>
+	<head>
+		<title>Cartomatic</title>
+		<meta charset = "utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		
+		
+		<link rel="stylesheet" type="text/css" href="CartomaticWeb.css">
+		
+		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+		<script src="CartomaticWeb.js"></script>
+	</head>
+	<body>
+		<header>
+			<div class="oneThird">
+				<a href="#aboutDiv" class="headerBtn" id="aboutBtn">ABOUT</a>
+				<a href="#homeDiv" class="headerBtn" id="homeBtn">HOME</a>
+			</div>
+			<div class="oneThird">
+				<p class="headerLogo"></p>
+			</div>
+			<div class="oneThird">
+				<a href="#resultDiv" class="headerBtn">RESULTS</a>
+				<a href="#documentDiv" class="headerBtn">DOCUMENTS</a>
+			</div>
+		</header>
+		
+		<div class="allDiv" id="homeDiv"> <!--HOME-->
+			<div class="textDiv">
+				<h1> Welcome to Cartomatic </h1>
+				<h2> Your automated map reader</h2>
+				<hr>
+				<p>Every military officer or rescue leader know that in order to fastly organize and structure large operations you need good maps. This can sometimes be hard to come by, for example if the environment is a war zone or just after a catastrophy - flooding, avalanche or earthquake - where the surroundings dramatically has changed. With today’s satellites it is possible to get hold of large area images, but this is not always good enough. They can be hard to interpret - and primarily - they need to be interpreted. </p><br>
+				<p>Cartomatic offers you a way to automatically create maps from these satellite images, which allows you to quick and easy see what roads are operational, and how to in the best way get from point A to B. A quick response in situations like war or disaster are the key to save lives! </p><br>
+				<p>Our maps are created with cutting edge machine learning technology which allows you access to up to date maps in an instance. The software is easy to use so you can focus on what is important. </p><br>
+				<br>
+				<h1> Site description</h1>
+				<hr>
+				<p>This site is a part of a project in the course TSBB11, "Bilder och Grafik", at Linköping University during the autumn period of 2015. The project topic is classification of objects in satellite images. The project is done by requst of Vricon, an international company working with satellite images and 3D models.</p>
+			</div>
+			
+			<div id="homeImage" class="imageDiv"></div>
+			
+		</div>
+		
+		<div class="allDiv" id="aboutDiv"> <!--ABOUT-->
+			<div class="textDiv">
+				<h1>US</h1>
+				<hr>
+				<p>The project group consists of six students at Linköpings University</p><br>
+				<p id = "p3"class="members"> Karin Stacke</p>
+				<p id = "p6"class="members"> Joakim Svensk</p>
+				<p id = "p2"class="members"> Hannes Järrendahl </p>
+				<p id = "p4"class="members"> Gustav Tapper</p>
+				<p id = "p0"class="members"> Victoria Härd</p>
+				<p id = "p5"class="members"> Sara Shimekaw</p>
+				<p id = "p1"class="members"> Patrik Tosteberg</p>
+			</div>
+			
+			<div id="aboutImage" class="imageDiv"></div>
+			
+			<div class="textDiv" id="textSecond">
+				<h1>THE PROJECT</h1>
+				<hr>
+				<br>
+				<h2>Introduction</h2>
+				<p>With today's technology it is possible to get very high resolution images of the entire earth. This data could be used to create accurate and up-to-date maps. Creating these maps by hand would be very time consuming and the demand of up-to-date would not be met. There is therfore a need for an automated classification system. 
+					<br>Vricon is an international company that developes photo realistic 3D maps of the globe based on satellite images. They requsted a method to classify objects, mainly roads and water, in their satellite images. The method should make use of neural networks to learn itself and improve the classification quality.
+				</p>
+				<br>
+				<h2>Technology</h2>
+				<p>The developed system can classify roads and water in satellite images from Vricon. The system consists of two modules, a training module and a test module, as seen in the figure below.
+					<br>
+					The training module takes care of data pre-processing and training of a neural network. In short, training of a neural network is done by making an estimation of the wanted result based on input data and then changing how different input data is weighed and iterating the estimation many times. To verify the estimated result in order to change the weights in the right direction, a ground truth of the wanted result is needed. As ground truth for the developed system, maps from OpenStreetMap was used. OpenStreetMap (OSM) is an open-source online world map that allows private users from all over the world to contribute with geographic information.
+					<br>
+					For more reading about neural networks, the website <a target="_blank" href="http://neuralnetworksanddeeplearning.com/">http://neuralnetworksanddeeplearning.com/</a> is recomended.
+					<br><br>
+					The test module takes care of testing the resulting network and evaluating the classification quality. To evaluate the classification quality, a classified area is compared to the ground truth in the same area. The final system can take a satellite image from Vricon as input and automatically download data from OSM over the same area. The system creates a ground truth image by processing the OSM data. The ground truth image is then used to train the nerual network. The system outputs a classified image and statistics about the classification. The statistics is collected both during training and testing phases and is an important part of the result.
+				</p>
+			</div>
+			
+			<div id="systemImage" class="imageDiv"></div>
+		</div>
+		
+		<div class="allDiv" id="resultDiv"> <!--RESULT-->
+			<div class="textDiv">
+				<h1>Better then the expected</h1>
+				<hr>
+				<p>The confidence output from the network and post-processed classification max blended with the original for two test images are shown in Figure 3. Red represents background (BCC), green water (WCC) and blue roads (RCC). The accuracies for the classification max image (UL) were BCC: 73.3 % , WCC: 90.7 % and RCC: 73.1 %. After post-processing the accuracies were ramped up to BCC: 82.9 %, WCC: 94.5 % and RCC: 76.7 % (UR). The second test image contains no water and more distinct roads. The accuracies of the classification max were BCC: 76.4 % and RCC: 89.2 % (LL). The accuracies were ramped up to BCC: 85.6 % and RCC: 96.4 % after post-processing (LR).
+				</p>
+				<br><br>
+				<h1> System Overview</h1>
+				<hr>
+				<p>The input data to the neural network consists of different features that are extracted from satellite images provided by Vricon. Ground truth data was generated from OSM, containing the relevant information (i.e. roads and water). After sufficient training, the network is tested on a different satellite image to generate a resulting classification and evaluate the systems accuracy. 
+				<br><br>Features were extracted by dividing the input image into small pixel blocks and calculating different measures that depend on the cocurences of pixel pairs. This was done for each color band (RGB, NIR and PAN). Figure 2 shows the features extracted from the green band that gave the best classification results.
+				<br><br>A post-processing step is performed on the classification image in order to improve on the result further. The aim of this last step is to remove isolated pixels of classes that most likely are misclassified.
+				</p>
+			</div>
+			
+			<div id="fourImages">
+				<div id="imOne" class="oneOfFour"></div>
+				<div id="imTwo" class="oneOfFour"></div>
+				<div id="imThree" class="oneOfFour"></div>
+				<div id="imFour" class="oneOfFour"></div>
+			</div>
+			
+		</div>
+		
+		<div class="allDiv" id="documentDiv"> <!--DOCUMENTS-->
+			<div class="textDiv">
+				<h1>DOCUMENTS</h1>
+				<hr>
+				<br><h2>Downloads:</h2>
+				<a href="Technical_report.pdf" target="_blank">Technical report</a>
+				<br>
+				<a href="ProjectPlan1_0.pdf" target="_blank">Project Plan</a>
+				<br>
+				<a href="Projectspecification 0.2.pdf" target="_blank">Project Specification</a>
+				<br>
+				<a href="RequirementSpecification1_0.pdf" target="_blank">Requirement Specification</a>
+				<br>
+				<a href="User_manual.pdf" target="_blank">User Manual</a>
+			</div>
+		</div>
+		
+		<!--<footer>
+		</footer>-->
+	</body>
+</html>						
